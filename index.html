@@ -609,7 +609,6 @@
     // --- 20 Prominent NASA-Verified Stellar Systems Database ---
     const REAL_SOLAR_RADIUS_PX = 22;   // 1.00 R☉ = 22 px in Realistic mode
     const REAL_EARTH_RADIUS_PX = 0.24; // Scaled relative to NASA solar/planetary radii
-    const REFERENCE_ORBIT_SECONDS = 30.0; // 1 full orbit of reference planet = 30 seconds at 1.0x speed
 
     const defaultSystemsData = {
       "sol": {
@@ -1167,33 +1166,6 @@
       }
     };
 
-    // --- Realistic Proportional Orbital Speed Calculator (30s Reference Orbit at 1.0x) ---
-    function getReferencePlanet(sys) {
-      if (!sys || !sys.planets || sys.planets.length === 0) return null;
-      if (sys.id === "sol") {
-        return sys.planets.find(p => p.id === "earth") || sys.planets[2] || sys.planets[0];
-      }
-      const n = sys.planets.length;
-      if (n === 1) return sys.planets[0];
-      if (n === 2) return sys.planets[1]; // Outer planet = 30s for 2-planet systems
-      const midIndex = Math.floor((n - 1) / 2); // Middle planet = 30s for multi-planet systems
-      return sys.planets[midIndex];
-    }
-
-    function applyRealisticOrbitalSpeeds(sys) {
-      const refPlanet = getReferencePlanet(sys);
-      if (!refPlanet) return;
-      const refPeriod = parseFloat(refPlanet.periodDays) || 365.25;
-
-      sys.planets.forEach(p => {
-        const period = parseFloat(p.periodDays) || refPeriod;
-        const simOrbitSeconds = REFERENCE_ORBIT_SECONDS * (period / refPeriod);
-        // Angular velocity in radians per second at 1.0x speed
-        p.angularVelRadSec = (Math.PI * 2) / simOrbitSeconds;
-        p.speed = (p.angularVelRadSec / 60) * 2;
-      });
-    }
-
     // Load custom user systems from LocalStorage if available
     let systemsData = { ...defaultSystemsData };
     const savedCustomSystems = localStorage.getItem("custom_stellar_systems");
@@ -1203,9 +1175,6 @@
         systemsData = { ...systemsData, ...parsed };
       } catch(e) { console.error("Error loading saved systems", e); }
     }
-
-    // Apply proportional 30s-reference speeds to all loaded systems
-    Object.values(systemsData).forEach(applyRealisticOrbitalSpeeds);
 
     // --- State Variables ---
     let currentSystemId = "sol";
@@ -1250,6 +1219,27 @@
     let starLabel3D = null, planetLabels3D = [];
     let raycaster3D, mouse3D;
     let lastTrackedPos3D = new THREE.Vector3();
+
+    // --- Orbital Period Calculation (Seconds per Full Orbit at 1.0x Speed) ---
+    function getPlanetOrbitPeriodSeconds(sys, planet) {
+      if (!sys || !planet) return 30;
+      const pDays = Number(planet.periodDays);
+
+      // Solar System: Earth (365.25 days) = 30 seconds/orbit; other planets scaled proportionally by real periodDays
+      if (sys.id === "sol") {
+        const validDays = pDays > 0 ? pDays : 365.25;
+        return 30 * (validDays / 365.25);
+      }
+
+      // Other star systems: reference (shortest-period / innermost planet) = 5 seconds/orbit,
+      // and other planets in the system scale proportionally by periodDays (บัญญัติไตรยางศ์)
+      const validPeriods = (sys.planets || [])
+        .map(pl => Number(pl.periodDays))
+        .filter(d => d > 0);
+      const minPeriodDays = validPeriods.length > 0 ? Math.min(...validPeriods) : 1;
+      const validDays = pDays > 0 ? pDays : minPeriodDays;
+      return 5 * (validDays / minPeriodDays);
+    }
 
     // --- Color Parsing Helper ---
     function colorToRgba(colorStr, alpha) {
@@ -1502,7 +1492,7 @@
       selectSystem("sol");
       setupEventListeners();
       lastFrameTime = performance.now();
-      animate(lastFrameTime);
+      requestAnimationFrame(animate);
     });
 
     // --- System Search & List Management ---
@@ -2631,19 +2621,20 @@
       select3DAtScreenPos(e.clientX, e.clientY);
     }
 
-    // --- Animation Loop ---
+    // --- Animation Loop (Frame-Rate Independent Real-Time Orbital Motion) ---
     function animate(now = performance.now()) {
       requestAnimationFrame(animate);
 
-      const dt = Math.min(0.1, Math.max(0, (now - lastFrameTime) / 1000));
+      const dt = Math.min(Math.max((now - lastFrameTime) / 1000, 0), 0.1);
       lastFrameTime = now;
 
-      // Update Planet Physics Angles (1.0x = exact real-time proportional speed with 30s reference orbit)
+      // Update Planet Physics Angles based on exact orbital period in seconds
       if (isPlaying) {
         const sys = systemsData[currentSystemId];
         sys.planets.forEach(p => {
-          const omega = p.angularVelRadSec !== undefined ? p.angularVelRadSec : (p.speed * 30);
-          p.angle += omega * timeSpeed * dt;
+          const orbitSeconds = getPlanetOrbitPeriodSeconds(sys, p);
+          const angularVelocity = (Math.PI * 2) / orbitSeconds;
+          p.angle += angularVelocity * dt * timeSpeed;
         });
       }
 
@@ -2702,6 +2693,9 @@
 
     function togglePlayPause() {
       isPlaying = !isPlaying;
+      if (isPlaying) {
+        lastFrameTime = performance.now();
+      }
       const icon = document.getElementById("icon-play-pause");
       icon.className = isPlaying ? "fa-solid fa-pause" : "fa-solid fa-play ml-0.5";
     }
@@ -2877,9 +2871,8 @@
         const dist = parseFloat(row.querySelector(".p-dist").value);
         const size = parseFloat(row.querySelector(".p-size").value);
         const color = row.querySelector(".p-color").value;
-        const speed = parseFloat(row.querySelector(".p-speed").value) || 0.02;
+        const speed = parseFloat(row.querySelector(".p-speed").value);
         const habitable = row.querySelector(".p-habitable").checked;
-        const periodDays = Math.max(1, Math.round(0.6 / speed));
 
         planets.push({
           id: `${newId}_p${idx}`,
@@ -2891,7 +2884,7 @@
           color: color,
           hasRing: false,
           realDistAU: parseFloat((dist / 135).toFixed(3)),
-          periodDays: periodDays,
+          periodDays: Math.round(dist * 2.5),
           mass: "1.0 M⊕ (Estimated)",
           radius: "1.0 R⊕",
           temp: habitable ? "280 K" : "400 K",
@@ -2926,7 +2919,6 @@
         planets: planets
       };
 
-      applyRealisticOrbitalSpeeds(newSystem);
       systemsData[newId] = newSystem;
       
       const customOnly = {};
