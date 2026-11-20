@@ -1220,25 +1220,33 @@
     let raycaster3D, mouse3D;
     let lastTrackedPos3D = new THREE.Vector3();
 
-    // --- Orbital Period Calculation (Seconds per Full Orbit at 1.0x Speed) ---
-    function getPlanetOrbitPeriodSeconds(sys, planet) {
-      if (!sys || !planet) return 30;
-      const pDays = Number(planet.periodDays);
+    // --- Orbital Period & Angular Velocity Calculator (Rule of Three / บัญญัติไตรยางศ์) ---
+    function getPlanetOrbitDurationSec(sys, p) {
+      if (!sys || !sys.planets || sys.planets.length === 0) return 15;
 
-      // Solar System: Earth (365.25 days) = 30 seconds/orbit; other planets scaled proportionally by real periodDays
+      // Solar System: Earth completes 1 orbit in 15s (at 1.0x), others scaled proportionally by orbital period
       if (sys.id === "sol") {
-        const validDays = pDays > 0 ? pDays : 365.25;
-        return 30 * (validDays / 365.25);
+        const earth = sys.planets.find(pl => pl.id === "earth");
+        const earthDays = earth && earth.periodDays > 0 ? earth.periodDays : 365.25;
+        const pDays = p.periodDays > 0 ? p.periodDays : earthDays;
+        return 15 * (pDays / earthDays);
       }
 
-      // Other star systems: reference (shortest-period / innermost planet) = 5 seconds/orbit,
-      // and other planets in the system scale proportionally by periodDays (บัญญัติไตรยางศ์)
-      const validPeriods = (sys.planets || [])
+      // Custom systems: fastest/innermost planet = 5s, outer planets scaled proportionally by configured speed
+      if (sys.isCustom) {
+        const validSpeeds = sys.planets.map(pl => Number(pl.speed) || 0.01);
+        const maxSpeed = Math.max(...validSpeeds, 0.0001);
+        const pSpeed = Math.max(Number(p.speed) || 0.01, 0.0001);
+        return 5 * (maxSpeed / pSpeed);
+      }
+
+      // All other stellar systems: closest/innermost planet (smallest periodDays) = 5s, outer planets scaled proportionally
+      const validPeriods = sys.planets
         .map(pl => Number(pl.periodDays))
-        .filter(d => d > 0);
-      const minPeriodDays = validPeriods.length > 0 ? Math.min(...validPeriods) : 1;
-      const validDays = pDays > 0 ? pDays : minPeriodDays;
-      return 5 * (validDays / minPeriodDays);
+        .filter(d => !isNaN(d) && d > 0);
+      const minPeriod = validPeriods.length > 0 ? Math.min(...validPeriods) : 1;
+      const pPeriod = !isNaN(Number(p.periodDays)) && Number(p.periodDays) > 0 ? Number(p.periodDays) : minPeriod;
+      return 5 * (pPeriod / minPeriod);
     }
 
     // --- Color Parsing Helper ---
@@ -1492,7 +1500,7 @@
       selectSystem("sol");
       setupEventListeners();
       lastFrameTime = performance.now();
-      requestAnimationFrame(animate);
+      animate(lastFrameTime);
     });
 
     // --- System Search & List Management ---
@@ -2621,20 +2629,20 @@
       select3DAtScreenPos(e.clientX, e.clientY);
     }
 
-    // --- Animation Loop (Frame-Rate Independent Real-Time Orbital Motion) ---
+    // --- Animation Loop (Real-Time Delta for Exact Orbital Periods) ---
     function animate(now = performance.now()) {
       requestAnimationFrame(animate);
 
-      const dt = Math.min(Math.max((now - lastFrameTime) / 1000, 0), 0.1);
+      const dt = Math.min(0.1, Math.max(0, (now - lastFrameTime) / 1000));
       lastFrameTime = now;
 
-      // Update Planet Physics Angles based on exact orbital period in seconds
-      if (isPlaying) {
+      // Update Planet Physics Angles (1 full revolution = 2π radians)
+      if (isPlaying && dt > 0) {
         const sys = systemsData[currentSystemId];
         sys.planets.forEach(p => {
-          const orbitSeconds = getPlanetOrbitPeriodSeconds(sys, p);
-          const angularVelocity = (Math.PI * 2) / orbitSeconds;
-          p.angle += angularVelocity * dt * timeSpeed;
+          const orbitDurationSec = getPlanetOrbitDurationSec(sys, p);
+          const angularVelocity = (Math.PI * 2) / orbitDurationSec;
+          p.angle += angularVelocity * timeSpeed * dt;
         });
       }
 
@@ -2693,9 +2701,6 @@
 
     function togglePlayPause() {
       isPlaying = !isPlaying;
-      if (isPlaying) {
-        lastFrameTime = performance.now();
-      }
       const icon = document.getElementById("icon-play-pause");
       icon.className = isPlaying ? "fa-solid fa-pause" : "fa-solid fa-play ml-0.5";
     }
