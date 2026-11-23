@@ -29,7 +29,7 @@
     }
 
     html, body {
-      background-color: #050714;
+      background-color: #010206;
       color: #e2e8f0;
       overflow: hidden;
       overscroll-behavior: none;
@@ -442,7 +442,7 @@
 
     </div>
 
-    <!-- Bottom Area: Active Tracking Banner, Quick-Select Planet Strip & Play Controls -->
+    <!-- Bottom Area: Active Tracking Banner, Quick-Select Planet Strip & Play/Speed Controls -->
     <div class="flex flex-col items-center gap-1.5 md:gap-2 pointer-events-none">
       
       <!-- Active Tracking Indicator Pill -->
@@ -454,24 +454,60 @@
         </button>
       </div>
 
-      <!-- Planet & Star Quick-Select Bar -->
-      <div id="planet-selector-strip" class="glass-panel px-2.5 md:px-3 py-1.5 md:py-2 rounded-xl flex items-center gap-1.5 max-w-[95vw] md:max-w-3xl overflow-x-auto scrollable-strip pointer-events-auto shadow-xl">
-        <!-- Populated by JS -->
+      <!-- Planet & Star Quick-Select Bar (Collapsible) -->
+      <div id="planet-selector-strip" class="glass-panel px-2.5 md:px-3 py-1.5 md:py-2 rounded-xl flex items-center gap-1.5 max-w-[95vw] md:max-w-3xl pointer-events-auto shadow-xl">
+        <div id="planet-selector-list" class="flex items-center gap-1.5 overflow-x-auto scrollable-strip flex-1 min-w-0">
+          <!-- Populated by JS -->
+        </div>
+        <button type="button" onclick="togglePlanetStrip(false)" class="w-7 h-7 rounded-lg bg-slate-800/90 hover:bg-rose-600/80 text-slate-400 hover:text-white border border-slate-700/70 flex items-center justify-center transition-all flex-shrink-0 ml-1" title="ปิดแถบเลือกดาวเคราะห์">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
       </div>
 
-      <!-- Play Controls -->
-      <div class="glass-panel px-4 md:px-6 py-2 md:py-3 rounded-2xl flex items-center gap-4 md:gap-6 shadow-2xl pointer-events-auto">
+      <!-- Play & Speed Controls Panel (Collapsible) -->
+      <div id="speed-controls-bar" class="glass-panel px-3.5 md:px-5 py-2 md:py-2.5 rounded-2xl flex flex-wrap sm:flex-nowrap items-center justify-center gap-2.5 md:gap-4 shadow-2xl pointer-events-auto max-w-[96vw]">
         <!-- Play / Pause -->
-        <button id="btn-play-pause" onclick="togglePlayPause()" class="w-9 h-9 md:w-10 md:h-10 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center transition-all shadow-lg glow-effect">
-          <i class="fa-solid fa-pause" id="icon-play-pause"></i>
+        <button id="btn-play-pause" onclick="togglePlayPause()" class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center transition-all shadow-lg glow-effect flex-shrink-0" title="เล่น / หยุดชั่วคราว">
+          <i class="fa-solid fa-pause text-xs md:text-sm" id="icon-play-pause"></i>
         </button>
 
-        <!-- Speed Slider -->
-        <div class="flex items-center gap-2.5 md:gap-3">
-          <i class="fa-solid fa-gauge-high text-xs text-slate-400"></i>
-          <span class="text-xs text-slate-300 w-10 md:w-12" id="speed-label">1.0x</span>
-          <input type="range" id="speed-slider" min="0" max="5" step="0.1" value="1" oninput="updateSpeed(this.value)" class="w-24 md:w-28 accent-blue-500 h-1.5 bg-slate-700 rounded-lg cursor-pointer">
+        <!-- Speed Slider & Readout (Manual up to 100x) -->
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-gauge-high text-xs text-blue-400"></i>
+          <span class="text-xs font-semibold text-slate-200 w-12 text-center tabular-nums" id="speed-label">1.0x</span>
+          <input type="range" id="speed-slider" min="0" max="100" step="0.1" value="1" oninput="updateSpeed(this.value)" class="w-20 sm:w-28 accent-blue-500 h-1.5 bg-slate-700 rounded-lg cursor-pointer">
         </div>
+
+        <div class="hidden sm:block h-5 w-px bg-slate-700/70"></div>
+
+        <!-- Preset Speed Buttons: 1x 2x 3x 5x 10x -->
+        <div class="flex items-center gap-1 bg-slate-900/85 p-1 rounded-xl border border-slate-700/60" id="speed-preset-group">
+          <button type="button" data-speed="1" onclick="setPresetSpeed(1)" class="speed-preset-btn px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-[11px] font-semibold bg-blue-600 text-white shadow transition-all">1x</button>
+          <button type="button" data-speed="2" onclick="setPresetSpeed(2)" class="speed-preset-btn px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white transition-all">2x</button>
+          <button type="button" data-speed="3" onclick="setPresetSpeed(3)" class="speed-preset-btn px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white transition-all">3x</button>
+          <button type="button" data-speed="5" onclick="setPresetSpeed(5)" class="speed-preset-btn px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white transition-all">5x</button>
+          <button type="button" data-speed="10" onclick="setPresetSpeed(10)" class="speed-preset-btn px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white transition-all">10x</button>
+        </div>
+
+        <!-- Close / Minimize Speed Bar Button -->
+        <button type="button" onclick="toggleSpeedBar(false)" class="w-7 h-7 rounded-lg bg-slate-800/90 hover:bg-rose-600/80 text-slate-400 hover:text-white border border-slate-700/70 flex items-center justify-center transition-all flex-shrink-0" title="ปิดแท็บความเร็ว">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Mini Reopen Buttons Row when Planet Strip or Speed Bar is Closed -->
+      <div id="mini-reopen-row" class="flex items-center justify-center gap-2 pointer-events-none">
+        <button type="button" id="btn-open-planet-strip" onclick="togglePlanetStrip(true)" class="hidden glass-panel px-3.5 py-1.5 rounded-full border border-blue-500/40 hover:border-blue-400 text-slate-200 hover:text-white text-xs font-semibold flex items-center gap-2 pointer-events-auto shadow-lg transition-all" title="เปิดแถบเลือกดาวเคราะห์">
+          <i class="fa-solid fa-globe text-blue-400"></i>
+          <span>แถบเลือกดาว</span>
+          <i class="fa-solid fa-chevron-up text-[10px] text-slate-400"></i>
+        </button>
+
+        <button type="button" id="btn-open-speed-bar" onclick="toggleSpeedBar(true)" class="hidden glass-panel px-3.5 py-1.5 rounded-full border border-blue-500/40 hover:border-blue-400 text-slate-200 hover:text-white text-xs font-semibold flex items-center gap-2 pointer-events-auto shadow-lg transition-all" title="เปิดแถบปรับความเร็ว">
+          <i class="fa-solid fa-gauge-high text-blue-400"></i>
+          <span>ความเร็ว: <strong id="mini-speed-label" class="text-blue-300 tabular-nums">1.0x</strong></span>
+          <i class="fa-solid fa-chevron-up text-[10px] text-slate-400"></i>
+        </button>
       </div>
 
     </div>
@@ -574,7 +610,6 @@
       function updateLoader(now) {
         const elapsed = now - startTime;
         const rawProgress = Math.min(1, elapsed / totalDurationMs);
-        // Smooth ease-in-out curve for natural loading feel
         const easedProgress = rawProgress < 0.5
           ? 2 * rawProgress * rawProgress
           : 1 - Math.pow(-2 * rawProgress + 2, 2) / 2;
@@ -1181,6 +1216,8 @@
     let systemSearchQuery = "";
     let isSystemSidebarOpen = window.innerWidth >= 768;
     let isSettingsOpen = false;
+    let isPlanetStripOpen = true;
+    let isSpeedBarOpen = true;
     let showStarfield = true;
     let realisticLighting = false;
     let viewMode = "2d"; // '2d' or '3d'
@@ -1220,33 +1257,34 @@
     let raycaster3D, mouse3D;
     let lastTrackedPos3D = new THREE.Vector3();
 
-    // --- Orbital Period & Angular Velocity Calculator (Rule of Three / บัญญัติไตรยางศ์) ---
-    function getPlanetOrbitDurationSec(sys, p) {
-      if (!sys || !sys.planets || sys.planets.length === 0) return 15;
+    // --- Proportional Orbital Velocity Helper (rad/sec at 1.0x speed) ---
+    function getPlanetAngularSpeed(sys, planet) {
+      if (!sys || !planet || !sys.planets || sys.planets.length === 0) return 0;
 
-      // Solar System: Earth completes 1 orbit in 15s (at 1.0x), others scaled proportionally by orbital period
       if (sys.id === "sol") {
-        const earth = sys.planets.find(pl => pl.id === "earth");
-        const earthDays = earth && earth.periodDays > 0 ? earth.periodDays : 365.25;
-        const pDays = p.periodDays > 0 ? p.periodDays : earthDays;
-        return 15 * (pDays / earthDays);
+        // Solar System: Earth (365.25 days) completes 1 full orbit (2π rad) in 15 seconds at 1x speed
+        // Other planets scale proportionally by their orbital period relative to Earth
+        const earthPeriodDays = 365.25;
+        const planetPeriodDays = Number(planet.periodDays) || earthPeriodDays;
+        const orbitDurationSec = 15 * (planetPeriodDays / earthPeriodDays);
+        return (Math.PI * 2) / orbitDurationSec;
+      } else {
+        // Other Stellar Systems: Innermost planet completes 1 full orbit (2π rad) in 10 seconds at 1x speed
+        // Other planets in that system scale proportionally by their orbital period (บัญญัติไตรยางศ์)
+        let innermost = sys.planets[0];
+        for (let i = 1; i < sys.planets.length; i++) {
+          const p = sys.planets[i];
+          const pDist = p.realDistAU !== undefined ? Number(p.realDistAU) : Number(p.dist);
+          const minDist = innermost.realDistAU !== undefined ? Number(innermost.realDistAU) : Number(innermost.dist);
+          if (pDist < minDist) {
+            innermost = p;
+          }
+        }
+        const innerPeriod = Number(innermost.periodDays) || 1;
+        const planetPeriod = Number(planet.periodDays) || innerPeriod;
+        const orbitDurationSec = 10 * (planetPeriod / innerPeriod);
+        return (Math.PI * 2) / orbitDurationSec;
       }
-
-      // Custom systems: fastest/innermost planet = 5s, outer planets scaled proportionally by configured speed
-      if (sys.isCustom) {
-        const validSpeeds = sys.planets.map(pl => Number(pl.speed) || 0.01);
-        const maxSpeed = Math.max(...validSpeeds, 0.0001);
-        const pSpeed = Math.max(Number(p.speed) || 0.01, 0.0001);
-        return 5 * (maxSpeed / pSpeed);
-      }
-
-      // All other stellar systems: closest/innermost planet (smallest periodDays) = 5s, outer planets scaled proportionally
-      const validPeriods = sys.planets
-        .map(pl => Number(pl.periodDays))
-        .filter(d => !isNaN(d) && d > 0);
-      const minPeriod = validPeriods.length > 0 ? Math.min(...validPeriods) : 1;
-      const pPeriod = !isNaN(Number(p.periodDays)) && Number(p.periodDays) > 0 ? Number(p.periodDays) : minPeriod;
-      return 5 * (pPeriod / minPeriod);
     }
 
     // --- Color Parsing Helper ---
@@ -1266,6 +1304,59 @@
         }
       }
       return `rgba(255, 220, 150, ${alpha})`;
+    }
+
+    // --- Planet Selector Strip Open/Close ---
+    function togglePlanetStrip(forceState) {
+      const strip = document.getElementById("planet-selector-strip");
+      const miniBtn = document.getElementById("btn-open-planet-strip");
+      if (!strip || !miniBtn) return;
+
+      isPlanetStripOpen = forceState !== undefined ? forceState : !isPlanetStripOpen;
+      if (isPlanetStripOpen) {
+        strip.classList.remove("hidden");
+        miniBtn.classList.add("hidden");
+      } else {
+        strip.classList.add("hidden");
+        miniBtn.classList.remove("hidden");
+      }
+    }
+
+    // --- Speed Bar Open/Close & Preset Controls ---
+    function toggleSpeedBar(forceState) {
+      const bar = document.getElementById("speed-controls-bar");
+      const miniBtn = document.getElementById("btn-open-speed-bar");
+      if (!bar || !miniBtn) return;
+
+      isSpeedBarOpen = forceState !== undefined ? forceState : !isSpeedBarOpen;
+      if (isSpeedBarOpen) {
+        bar.classList.remove("hidden");
+        miniBtn.classList.add("hidden");
+      } else {
+        bar.classList.add("hidden");
+        miniBtn.classList.remove("hidden");
+      }
+    }
+
+    function setPresetSpeed(mult) {
+      const slider = document.getElementById("speed-slider");
+      if (slider) {
+        slider.value = mult;
+      }
+      updateSpeed(mult);
+    }
+
+    function syncSpeedPresetButtons() {
+      const buttons = document.querySelectorAll(".speed-preset-btn");
+      buttons.forEach(btn => {
+        const btnSpeed = parseFloat(btn.getAttribute("data-speed"));
+        const isActive = Math.abs(timeSpeed - btnSpeed) < 0.01;
+        if (isActive) {
+          btn.className = "speed-preset-btn px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-[11px] font-semibold bg-blue-600 text-white shadow transition-all";
+        } else {
+          btn.className = "speed-preset-btn px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white transition-all";
+        }
+      });
     }
 
     // --- Settings Panel & Display Modes ---
@@ -1303,9 +1394,13 @@
         }
       }
 
-      const bgColor = showStarfield ? "#050714" : "#000000";
+      const bgColor = showStarfield ? "#010206" : "#000000";
       document.documentElement.style.backgroundColor = bgColor;
       document.body.style.backgroundColor = bgColor;
+
+      if (renderer3D) {
+        renderer3D.setClearColor(showStarfield ? 0x010206 : 0x000000, 1);
+      }
 
       if (starGroup3D) {
         starGroup3D.visible = showStarfield;
@@ -1494,13 +1589,15 @@
     window.addEventListener("DOMContentLoaded", () => {
       startPreloaderSequence();
       toggleSystemSidebar(isSystemSidebarOpen);
+      syncSpeedPresetButtons();
       init2D();
       init3D();
+      setStarfieldMode(showStarfield);
       renderSystemList();
       selectSystem("sol");
       setupEventListeners();
       lastFrameTime = performance.now();
-      animate(lastFrameTime);
+      requestAnimationFrame(animate);
     });
 
     // --- System Search & List Management ---
@@ -1623,7 +1720,7 @@
     }
 
     function renderPlanetSelectorStrip() {
-      const strip = document.getElementById("planet-selector-strip");
+      const strip = document.getElementById("planet-selector-list");
       if (!strip) return;
       strip.innerHTML = "";
 
@@ -1892,7 +1989,6 @@
             const scaleFactor = dist / lastPinchDist;
             const newZoom = Math.max(0.05, Math.min(8.0, zoom2D * scaleFactor));
 
-            // Keep world point under pinch midpoint anchored while zooming & panning
             const worldX = (lastPinchCenterX - (canvas2D.width / 2 + panX)) / zoom2D;
             const worldY = (lastPinchCenterY - (canvas2D.height / 2 + panY)) / zoom2D;
             panX = centerX - canvas2D.width / 2 - worldX * newZoom;
@@ -1915,7 +2011,6 @@
           isTouchPinching2D = false;
           lastPinchDist = 0;
         } else if (e.touches.length === 1) {
-          // Smoothly switch from 2-finger pinch back to 1-finger pan
           isTouchPinching2D = false;
           isTouchPanning2D = true;
           touchStartX = e.touches[0].clientX;
@@ -1936,7 +2031,6 @@
       const pulse = 0.65 + 0.35 * Math.sin(performance.now() * 0.006);
 
       ctx2D.save();
-      // Soft green glow ring
       ctx2D.beginPath();
       ctx2D.arc(x, y, radius + (6 / zoom2D), 0, Math.PI * 2);
       ctx2D.strokeStyle = "#22c55e";
@@ -1946,7 +2040,6 @@
       ctx2D.stroke();
       ctx2D.shadowBlur = 0;
 
-      // Outer pulsing green ring
       ctx2D.beginPath();
       ctx2D.arc(x, y, radius + ((11 + pulse * 3) / zoom2D), 0, Math.PI * 2);
       ctx2D.strokeStyle = `rgba(74, 222, 128, ${0.4 + pulse * 0.35})`;
@@ -1976,13 +2069,13 @@
         }
       }
 
-      ctx2D.clearRect(0, 0, canvas2D.width, canvas2D.height);
+      ctx2D.fillStyle = showStarfield ? "#010206" : "#000000";
+      ctx2D.fillRect(0, 0, canvas2D.width, canvas2D.height);
 
       // Draw Scattered White Starfield Background (if enabled)
       draw2DStarfield();
 
       ctx2D.save();
-      // Center & Apply Pan/Zoom
       const centerX = canvas2D.width / 2 + panX;
       const centerY = canvas2D.height / 2 + panY;
       ctx2D.translate(centerX, centerY);
@@ -2010,7 +2103,7 @@
         ctx2D.stroke();
       }
 
-      // Draw Orbit Lines (Adaptive thickness & brightness when zoomed out)
+      // Draw Orbit Lines
       if (showOrbits) {
         const zoomBoost = zoom2D < 1 ? Math.min(0.45, (1 - zoom2D) * 0.48) : 0;
         sys.planets.forEach(p => {
@@ -2036,7 +2129,6 @@
       const baseStarRadius = getStarBaseRadius(sys);
       const starRadius = Math.max(baseStarRadius, 2.5 / zoom2D);
 
-      // Atmospheric Corona Glow in Realistic Lighting Mode
       if (realisticLighting) {
         const coronaR = starRadius * 3.8;
         const coronaGrad = ctx2D.createRadialGradient(0, 0, starRadius * 0.85, 0, 0, coronaR);
@@ -2057,12 +2149,10 @@
       ctx2D.fill();
       ctx2D.shadowBlur = 0;
 
-      // Green Tracking Highlight around Host Star if tracked
       if (isObjectTracked(sys.star)) {
         drawGreenTrackingHighlight2D(0, 0, starRadius);
       }
 
-      // Draw Star Label (Constant screen font size at all zoom levels)
       if (showLabels) {
         ctx2D.fillStyle = isObjectTracked(sys.star) ? "#4ade80" : "#ffffff";
         ctx2D.font = `${isObjectTracked(sys.star) ? 'bold ' : ''}${12 / zoom2D}px Kanit`;
@@ -2080,7 +2170,6 @@
         const y = Math.sin(p.angle) * dist;
         const isTracked = isObjectTracked(p);
 
-        // Draw Planet Body
         ctx2D.save();
         ctx2D.beginPath();
         ctx2D.arc(x, y, size, 0, Math.PI * 2);
@@ -2098,7 +2187,6 @@
           const cosA = Math.cos(p.angle);
           const sinA = Math.sin(p.angle);
 
-          // 1. Neutral white sunlight highlight on the star-facing side
           const litX = x - cosA * size * 0.45;
           const litY = y - sinA * size * 0.45;
           const sunGrad = ctx2D.createRadialGradient(litX, litY, size * 0.05, x, y, size * 1.15);
@@ -2108,7 +2196,6 @@
           ctx2D.fillStyle = sunGrad;
           ctx2D.fillRect(x - size, y - size, size * 2, size * 2);
 
-          // 2. Deep night-side shadow facing away from the host star
           const shadowCenterX = x - cosA * size * 0.35;
           const shadowCenterY = y - sinA * size * 0.35;
           const shadowGrad = ctx2D.createRadialGradient(shadowCenterX, shadowCenterY, size * 0.22, x, y, size * 1.04);
@@ -2121,7 +2208,6 @@
         }
         ctx2D.restore();
 
-        // Draw Rings if any
         if (p.hasRing) {
           ctx2D.beginPath();
           ctx2D.ellipse(x, y, size * 1.8, size * 0.6, Math.PI / 4, 0, Math.PI * 2);
@@ -2132,7 +2218,6 @@
           ctx2D.stroke();
         }
 
-        // Draw Green Tracking Highlight if tracked, else Selection Glow
         if (isTracked) {
           drawGreenTrackingHighlight2D(x, y, size);
         } else if (selectedObject && selectedObject.id === p.id) {
@@ -2143,7 +2228,6 @@
           ctx2D.stroke();
         }
 
-        // Draw Planet Label (Constant screen font size at all zoom levels)
         if (showLabels) {
           ctx2D.fillStyle = isTracked ? "#4ade80" : (p.habitable ? "#86efac" : "#cbd5e1");
           ctx2D.font = `${isTracked ? 'bold ' : ''}${11 / zoom2D}px Kanit`;
@@ -2163,13 +2247,11 @@
       const centerX = canvas2D.width / 2 + panX;
       const centerY = canvas2D.height / 2 + panY;
 
-      // Transform click/tap to canvas world coordinates
       const worldX = (mouseX - centerX) / zoom2D;
       const worldY = (mouseY - centerY) / zoom2D;
 
       const sys = systemsData[currentSystemId];
 
-      // Check Star Click/Tap
       const baseStarR = getStarBaseRadius(sys);
       const starR = Math.max(baseStarR, 10 / zoom2D);
       if (Math.hypot(worldX, worldY) <= starR) {
@@ -2177,7 +2259,6 @@
         return;
       }
 
-      // Check Planets Click/Tap (generous hit radius for touch screens)
       for (let p of sys.planets) {
         const dist = getPlanetDist(sys, p);
         const px = Math.cos(p.angle) * dist;
@@ -2267,7 +2348,8 @@
       camera3D = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 30000);
       camera3D.position.set(0, 450, 650);
 
-      renderer3D = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer3D = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      renderer3D.setClearColor(showStarfield ? 0x010206 : 0x000000, 1);
       renderer3D.setSize(window.innerWidth, window.innerHeight);
       renderer3D.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer3D.domElement.style.touchAction = "none";
@@ -2284,13 +2366,10 @@
         ONE: THREE.TOUCH.ROTATE,
         TWO: THREE.TOUCH.DOLLY_PAN
       };
-      // Save initial camera position, angle, zoom & target for clean system switching
       controls3D.saveState();
 
-      // Scattered White Starfield Dome
       init3DStars();
 
-      // Lighting Setup (Controlled dynamically by Normal vs Realistic Lighting setting)
       ambientLight3D = new THREE.AmbientLight(0xffffff, 0.9);
       scene3D.add(ambientLight3D);
 
@@ -2298,13 +2377,11 @@
       dirLight3D.position.set(0, 500, 0);
       scene3D.add(dirLight3D);
 
-      // Raycaster for click & tap selection
       raycaster3D = new THREE.Raycaster();
       mouse3D = new THREE.Vector2();
 
       renderer3D.domElement.addEventListener("click", handle3DClick);
 
-      // Touch Tap Support on 3D Canvas
       let touch3DStartX = 0, touch3DStartY = 0, touch3DMoved = false;
       renderer3D.domElement.addEventListener("touchstart", e => {
         if (e.touches.length === 1) {
@@ -2342,7 +2419,6 @@
     }
 
     function build3DScene() {
-      // Clear existing meshes & 3D labels
       if (starMesh3D) scene3D.remove(starMesh3D);
       if (hzMesh3D) scene3D.remove(hzMesh3D);
       if (trackRing3D) scene3D.remove(trackRing3D);
@@ -2362,7 +2438,6 @@
 
       const sys = systemsData[currentSystemId];
 
-      // Build Host Star Mesh
       const starR = isRealisticScale ? getStarBaseRadius(sys) * 0.8 : getStarBaseRadius(sys) * 0.7;
       const starGeo = new THREE.SphereGeometry(starR, 32, 32);
       const starMat = new THREE.MeshBasicMaterial({ color: sys.star.color });
@@ -2370,7 +2445,6 @@
       starMesh3D.userData = { data: sys.star, type: "star", baseRadius: starR };
       scene3D.add(starMesh3D);
 
-      // Luminous Star Corona Sprite (Shown in Realistic Lighting mode)
       const glowMat = new THREE.SpriteMaterial({
         map: createStarGlowTexture3D(),
         color: sys.star.color,
@@ -2383,7 +2457,6 @@
       starGlowSprite3D.visible = realisticLighting;
       starMesh3D.add(starGlowSprite3D);
 
-      // Create Host Star 3D Floating Label (fixed 12px screen size)
       if (labelsContainer) {
         const sLabel = document.createElement("div");
         sLabel.className = "label-3d-tag text-[12px] text-white";
@@ -2396,7 +2469,6 @@
       starLight3D = new THREE.PointLight(0xffffff, realisticLighting ? 2.4 : 1.5, 0, 0);
       starMesh3D.add(starLight3D);
 
-      // Build Green Tracking Highlight Ring for 3D
       const trackGeo = new THREE.RingGeometry(1.35, 1.75, 48);
       const trackMat = new THREE.MeshBasicMaterial({
         color: 0x22c55e,
@@ -2410,7 +2482,6 @@
       trackRing3D.visible = false;
       scene3D.add(trackRing3D);
 
-      // Build 3D Habitable Zone Disc
       const hz = getHZBounds(sys);
       if (hz.min && hz.max) {
         const hzGeo = new THREE.RingGeometry(hz.min, hz.max, 64);
@@ -2426,12 +2497,10 @@
         scene3D.add(hzMesh3D);
       }
 
-      // Build Planets & Orbits
       sys.planets.forEach(p => {
         const dist = getPlanetDist(sys, p);
         const size = isRealisticScale ? Math.max(0.8, getPlanetRealRadius(p) * 0.8) : p.size * 0.6;
 
-        // Orbit Line (256 segments for smooth circles at large zoom)
         const orbitGeo = new THREE.BufferGeometry();
         const points = [];
         for (let i = 0; i <= 256; i++) {
@@ -2449,7 +2518,6 @@
         scene3D.add(orbitLine);
         orbitLines3D.push(orbitLine);
 
-        // Planet Mesh
         const planetGeo = new THREE.SphereGeometry(size, 32, 32);
         const planetMat = new THREE.MeshStandardMaterial({ 
           color: p.color, 
@@ -2459,7 +2527,6 @@
         const planetMesh = new THREE.Mesh(planetGeo, planetMat);
         planetMesh.userData = { data: p, type: "planet" };
 
-        // Planetary Ring if enabled
         if (p.hasRing) {
           const ringGeo = new THREE.RingGeometry(size * 1.4, size * 2.2, 32);
           const ringMat = new THREE.MeshBasicMaterial({ 
@@ -2476,7 +2543,6 @@
         scene3D.add(planetMesh);
         planetMeshes3D.push({ mesh: planetMesh, data: p, baseSize: size });
 
-        // Create Planet 3D Floating Label (fixed 11px screen size)
         if (labelsContainer) {
           const pLabel = document.createElement("div");
           pLabel.className = "label-3d-tag text-[11px]";
@@ -2492,7 +2558,6 @@
     function update3DPlanets() {
       const sys = systemsData[currentSystemId];
       const camDist = camera3D.position.distanceTo(controls3D.target);
-      // Keep distant planets visible even when zoomed out far
       const zoomScaleBoost = camDist > 900 ? Math.min(6, camDist / 900) : 1;
 
       let trackedMesh3D = null;
@@ -2518,7 +2583,6 @@
         trackedRadius3D = starMesh3D.userData.baseRadius || 15;
       }
 
-      // Update 3D Camera Follow & Green Highlight Ring
       if (trackedObject && trackedMesh3D) {
         const currentPos = trackedMesh3D.position;
         const delta = new THREE.Vector3().subVectors(currentPos, lastTrackedPos3D);
@@ -2536,7 +2600,6 @@
         trackRing3D.visible = false;
       }
 
-      // Boost orbit line opacity when camera zooms out far & highlight tracked orbit
       if (showOrbits) {
         const distFactor = Math.max(0, Math.min(1, (camDist - 500) / 2500));
         orbitLines3D.forEach(l => {
@@ -2571,7 +2634,6 @@
 
       function positionTag(el, worldPos, worldRadius, isTracked, isStar, isHabitable) {
         if (!el) return;
-        // Position just below the bottom edge of the 3D sphere regardless of zoom
         projVec.copy(worldPos).addScaledVector(cameraUp, -worldRadius);
         projVec.project(camera3D);
 
@@ -2629,20 +2691,20 @@
       select3DAtScreenPos(e.clientX, e.clientY);
     }
 
-    // --- Animation Loop (Real-Time Delta for Exact Orbital Periods) ---
-    function animate(now = performance.now()) {
+    // --- Animation Loop (Frame-Rate Independent Real-Time Delta) ---
+    function animate(now) {
       requestAnimationFrame(animate);
 
-      const dt = Math.min(0.1, Math.max(0, (now - lastFrameTime) / 1000));
+      if (!now) now = performance.now();
+      const dt = Math.min((now - lastFrameTime) / 1000, 0.1);
       lastFrameTime = now;
 
-      // Update Planet Physics Angles (1 full revolution = 2π radians)
-      if (isPlaying && dt > 0) {
+      // Update Planet Physics Angles using real elapsed seconds (dt)
+      if (isPlaying) {
         const sys = systemsData[currentSystemId];
         sys.planets.forEach(p => {
-          const orbitDurationSec = getPlanetOrbitDurationSec(sys, p);
-          const angularVelocity = (Math.PI * 2) / orbitDurationSec;
-          p.angle += angularVelocity * timeSpeed * dt;
+          const angularVel = getPlanetAngularSpeed(sys, p);
+          p.angle += angularVel * timeSpeed * dt;
         });
       }
 
@@ -2702,12 +2764,16 @@
     function togglePlayPause() {
       isPlaying = !isPlaying;
       const icon = document.getElementById("icon-play-pause");
-      icon.className = isPlaying ? "fa-solid fa-pause" : "fa-solid fa-play ml-0.5";
+      icon.className = isPlaying ? "fa-solid fa-pause text-xs md:text-sm" : "fa-solid fa-play ml-0.5 text-xs md:text-sm";
     }
 
     function updateSpeed(val) {
       timeSpeed = parseFloat(val);
-      document.getElementById("speed-label").innerText = `${timeSpeed.toFixed(1)}x`;
+      const formatted = `${timeSpeed.toFixed(1)}x`;
+      document.getElementById("speed-label").innerText = formatted;
+      const miniLabel = document.getElementById("mini-speed-label");
+      if (miniLabel) miniLabel.innerText = formatted;
+      syncSpeedPresetButtons();
     }
 
     function toggleScaleMode() {
@@ -2878,6 +2944,8 @@
         const color = row.querySelector(".p-color").value;
         const speed = parseFloat(row.querySelector(".p-speed").value);
         const habitable = row.querySelector(".p-habitable").checked;
+        const au = dist / 135;
+        const estimatedPeriodDays = Math.max(1, Math.round(Math.pow(au, 1.5) * 365.25));
 
         planets.push({
           id: `${newId}_p${idx}`,
@@ -2888,8 +2956,8 @@
           realRadiusEarth: parseFloat((size / 6).toFixed(2)),
           color: color,
           hasRing: false,
-          realDistAU: parseFloat((dist / 135).toFixed(3)),
-          periodDays: Math.round(dist * 2.5),
+          realDistAU: parseFloat(au.toFixed(3)),
+          periodDays: estimatedPeriodDays,
           mass: "1.0 M⊕ (Estimated)",
           radius: "1.0 R⊕",
           temp: habitable ? "280 K" : "400 K",
