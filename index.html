@@ -1232,7 +1232,7 @@
 
     // 3D State
     let scene3D, camera3D, renderer3D, controls3D;
-    let ambientLight3D = null, dirLight3D = null, starLight3D = null, starGlowSprite3D = null;
+    let ambientLight3D = null, dirLight3D = null, starLight3D = null, starGlowMesh3D = null;
     let starGroup3D = null;
     let starMesh3D, planetMeshes3D = [], orbitLines3D = [], hzMesh3D = null, trackRing3D = null;
     let starLabel3D = null, planetLabels3D = [];
@@ -1380,7 +1380,7 @@
         starLight3D.color.setHex(0xffffff);
         starLight3D.intensity = realisticLighting ? 2.4 : 1.5;
       }
-      if (starGlowSprite3D) starGlowSprite3D.visible = realisticLighting;
+      if (starGlowMesh3D) starGlowMesh3D.visible = realisticLighting;
       planetMeshes3D.forEach(item => {
         if (item.mesh && item.mesh.material) {
           item.mesh.material.roughness = realisticLighting ? 0.82 : 0.5;
@@ -2358,22 +2358,6 @@
     }
 
     // --- 3D Engine ---
-    function createStarGlowTexture3D() {
-      const size = 128;
-      const c = document.createElement("canvas");
-      c.width = size;
-      c.height = size;
-      const gCtx = c.getContext("2d");
-      const grad = gCtx.createRadialGradient(size / 2, size / 2, 4, size / 2, size / 2, size / 2);
-      grad.addColorStop(0, "rgba(255, 255, 255, 0.95)");
-      grad.addColorStop(0.25, "rgba(255, 255, 255, 0.45)");
-      grad.addColorStop(0.6, "rgba(255, 255, 255, 0.12)");
-      grad.addColorStop(1, "rgba(255, 255, 255, 0)");
-      gCtx.fillStyle = grad;
-      gCtx.fillRect(0, 0, size, size);
-      return new THREE.CanvasTexture(c);
-    }
-
     function init3DStars() {
       starGroup3D = new THREE.Group();
       const createStarLayer = (count, pointSize, minBrightness, maxBrightness, opacity) => {
@@ -2507,7 +2491,7 @@
       hzMesh3D = null;
       trackRing3D = null;
       starLight3D = null;
-      starGlowSprite3D = null;
+      starGlowMesh3D = null;
       starLabel3D = null;
       planetLabels3D = [];
 
@@ -2523,17 +2507,26 @@
       starMesh3D.userData = { data: sys.star, type: "star", baseRadius: starR };
       scene3D.add(starMesh3D);
 
-      const glowMat = new THREE.SpriteMaterial({
-        map: createStarGlowTexture3D(),
-        color: sys.star.color,
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
+      // แสงฟุ้งรอบดาวฤกษ์แบบ Smooth BackSide Sphere (แก้บัคจุดสีแดง-เขียวบน iPad/WebGL)
+      starGlowMesh3D = new THREE.Group();
+      const coronaLayers = [
+        { scale: 1.45, opacity: 0.22 },
+        { scale: 2.05, opacity: 0.11 },
+        { scale: 2.85, opacity: 0.05 }
+      ];
+      coronaLayers.forEach(layer => {
+        const gGeo = new THREE.SphereGeometry(starR * layer.scale, 32, 32);
+        const gMat = new THREE.MeshBasicMaterial({
+          color: sys.star.color,
+          transparent: true,
+          opacity: layer.opacity,
+          side: THREE.BackSide,
+          depthWrite: false
+        });
+        starGlowMesh3D.add(new THREE.Mesh(gGeo, gMat));
       });
-      starGlowSprite3D = new THREE.Sprite(glowMat);
-      starGlowSprite3D.scale.set(starR * 5.5, starR * 5.5, 1);
-      starGlowSprite3D.visible = realisticLighting;
-      starMesh3D.add(starGlowSprite3D);
+      starGlowMesh3D.visible = realisticLighting;
+      starMesh3D.add(starGlowMesh3D);
 
       if (labelsContainer) {
         const sLabel = document.createElement("div");
