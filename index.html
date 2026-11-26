@@ -981,9 +981,11 @@
       requestAnimationFrame(updateLoader);
     }
 
-    // --- Prominent NASA-Verified Stellar Systems Database ---
-    const REAL_SOLAR_RADIUS_PX = 22;
+    // --- True Physical Astronomical Scale Constants ---
+    const SOLAR_TO_EARTH_RADII = 109.1;
+    const REAL_AU_BASE_PX = 240;
     const REAL_EARTH_RADIUS_PX = 0.24;
+    const REAL_SOLAR_RADIUS_PX = REAL_EARTH_RADIUS_PX * SOLAR_TO_EARTH_RADII; // ~26.18 px
 
     const defaultSystemsData = {
       "sol": {
@@ -995,7 +997,7 @@
         hzMax: 164.7,
         hzMinAU: 0.90,
         hzMaxAU: 1.22,
-        realAuScale: 135,
+        realAuScale: REAL_AU_BASE_PX,
         star: {
           name: "ดวงอาทิตย์ (Sun)",
           radius: 26,
@@ -1036,10 +1038,132 @@
       } catch(e) { console.error("Error loading saved systems", e); }
     }
 
+    // --- Deep Data Scanner: ดึงค่ารัศมีจริงของดาวฤกษ์และดาวเคราะห์จากทุกฟิลด์ของ nasa_data.js ---
+    function extractNumberFromField(val, isJupiterUnitCheck = false) {
+      if (val === undefined || val === null) return null;
+      if (typeof val === "number" && !isNaN(val) && val > 0) return val;
+      const str = String(val).trim();
+      const m = str.match(/([0-9]+(?:\.[0-9]+)?)/);
+      if (m) {
+        const num = parseFloat(m[1]);
+        if (!isNaN(num) && num > 0) {
+          if (isJupiterUnitCheck && /R_?J|M_?J|Jup/i.test(str)) {
+            return num * 11.209;
+          }
+          return num;
+        }
+      }
+      return null;
+    }
+
+    function parseStarSolarRadius(sys) {
+      if (!sys || !sys.star) return 1.0;
+      const s = sys.star;
+
+      const directCandidates = [s.realRadiusSolar, s.st_rad, s.starRadiusSolar, s.radiusSolar];
+      for (const cand of directCandidates) {
+        const val = extractNumberFromField(cand, false);
+        if (val !== null && val > 0.02 && val < 500) return val;
+      }
+
+      const textFields = [s.displayRadius, s.radiusText, s.desc, s.funFact];
+      for (const txt of textFields) {
+        if (!txt) continue;
+        const str = String(txt);
+        const solarMatch = str.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:R☉|R_?Sun|Solar\s*Radii|R_?☉)/i);
+        if (solarMatch) {
+          const v = parseFloat(solarMatch[1]);
+          if (v > 0.02 && v < 500) return v;
+        }
+        const generalNum = extractNumberFromField(str, false);
+        if (txt === s.displayRadius && generalNum !== null && generalNum > 0.02 && generalNum < 500) {
+          return /R_?⊕|Earth/i.test(str) ? generalNum / SOLAR_TO_EARTH_RADII : generalNum;
+        }
+      }
+
+      const massCandidates = [s.st_mass, s.mass];
+      for (const mCand of massCandidates) {
+        const mVal = extractNumberFromField(mCand, false);
+        if (mVal !== null && mVal > 0.05 && mVal < 150) {
+          return parseFloat(Math.pow(mVal, 0.8).toFixed(3));
+        }
+      }
+
+      const tempVal = extractNumberFromField(s.st_teff || s.temp, false);
+      if (tempVal !== null && tempVal >= 2300 && tempVal <= 12000) {
+        if (tempVal < 3200) return 0.16;
+        if (tempVal < 3900) return 0.45;
+        if (tempVal < 5200) return 0.74;
+        if (tempVal < 6000) return 1.00;
+        return 1.35;
+      }
+
+      return 0.85;
+    }
+
+    function parsePlanetEarthRadius(p) {
+      if (!p) return 1.0;
+
+      const earthCandidates = [p.realRadiusEarth, p.pl_rade, p.radiusEarth, p.earthRadius];
+      for (const cand of earthCandidates) {
+        const val = extractNumberFromField(cand, false);
+        if (val !== null && val > 0.1 && val < 50) return val;
+      }
+
+      const jupVal = extractNumberFromField(p.pl_radj, false);
+      if (jupVal !== null && jupVal > 0.01 && jupVal < 5) {
+        return parseFloat((jupVal * 11.209).toFixed(3));
+      }
+
+      const textFields = [p.radius, p.radiusText, p.desc, p.funFact];
+      for (const txt of textFields) {
+        if (!txt) continue;
+        const str = String(txt);
+        const jupMatch = str.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:R_?J|Rjup|Jupiter)/i);
+        if (jupMatch) {
+          const v = parseFloat(jupMatch[1]);
+          if (v > 0.01 && v < 5) return parseFloat((v * 11.209).toFixed(3));
+        }
+        const earthMatch = str.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:R⊕|R_?⊕|R_?Earth|Earth\s*Radii)/i);
+        if (earthMatch) {
+          const v = parseFloat(earthMatch[1]);
+          if (v > 0.1 && v < 50) return v;
+        }
+        if (txt === p.radius) {
+          const num = extractNumberFromField(str, true);
+          if (num !== null && num > 0.1 && num < 50) return num;
+        }
+      }
+
+      const massCandidates = [p.pl_bmasse, p.mass];
+      for (const mCand of massCandidates) {
+        if (!mCand) continue;
+        const str = String(mCand);
+        let earthMass = extractNumberFromField(str, false);
+        if (earthMass !== null && earthMass > 0) {
+          if (/M_?J|Mjup|Jupiter/i.test(str) || mCand === p.pl_bmassj) {
+            earthMass *= 317.8;
+          }
+          if (earthMass < 2.0) return parseFloat(Math.pow(earthMass, 0.28).toFixed(3));
+          if (earthMass < 130.0) return parseFloat(Math.pow(earthMass, 0.59).toFixed(3));
+          return 11.2;
+        }
+      }
+
+      const sz = Number(p.size);
+      if (!isNaN(sz) && sz > 0 && sz !== 6) {
+        return parseFloat((sz / 6).toFixed(2));
+      }
+      return 1.15;
+    }
+
     // --- Helper: Extract Real Semi-Major Axis (AU) ---
     function resolvePlanetAU(sys, p) {
-      const directAU = parseFloat(p.realDistAU);
-      if (!isNaN(directAU) && directAU > 0) return directAU;
+      const directCandidates = [p.realDistAU, p.pl_orbsmax, p.semiMajorAxis];
+      for (const cand of directCandidates) {
+        const val = parseFloat(cand);
+        if (!isNaN(val) && val > 0) return val;
+      }
 
       if (p.desc) {
         const m = String(p.desc).match(/([0-9]+(?:\.[0-9]+)?)\s*AU/i);
@@ -1049,10 +1173,10 @@
         }
       }
 
-      const period = parseFloat(p.periodDays);
+      const period = parseFloat(p.periodDays || p.pl_orbper);
       if (!isNaN(period) && period > 0) {
-        const starMassMatch = String(sys.star?.mass || "1").match(/([0-9]+(?:\.[0-9]+)?)/);
-        const starMass = starMassMatch ? Math.max(0.08, parseFloat(starMassMatch[1])) : 1.0;
+        const starMassMatch = String(sys.star?.mass || sys.star?.st_mass || "0.8").match(/([0-9]+(?:\.[0-9]+)?)/);
+        const starMass = starMassMatch ? Math.max(0.08, parseFloat(starMassMatch[1])) : 0.8;
         const years = period / 365.25;
         const derivedAU = Math.cbrt(starMass * years * years);
         if (derivedAU > 0) return derivedAU;
@@ -1071,7 +1195,29 @@
     function calibrateSystemOrbits(sys) {
       if (!sys || !sys.star || !Array.isArray(sys.planets) || sys.planets.length === 0) return;
 
+      sys.star._parsedSolarR = parseStarSolarRadius(sys);
+      if (sys.star.realRadiusSolar === undefined || isNaN(parseFloat(sys.star.realRadiusSolar))) {
+        sys.star.realRadiusSolar = sys.star._parsedSolarR;
+      }
+      if (!sys.star.displayRadius) {
+        sys.star.displayRadius = `${sys.star._parsedSolarR.toFixed(2)} R☉`;
+      }
+
       sys.planets.forEach(p => {
+        p._parsedEarthR = parsePlanetEarthRadius(p);
+        if (p.realRadiusEarth === undefined || isNaN(parseFloat(p.realRadiusEarth))) {
+          p.realRadiusEarth = p._parsedEarthR;
+        }
+        if (!p.radius || p.radius === "-") {
+          p.radius = `${p._parsedEarthR.toFixed(2)} R⊕`;
+        }
+
+        if (!p._schematicAdjusted) {
+          const rEarth = p._parsedEarthR;
+          p._computedSchematicSize = Math.max(3.5, Math.min(15, 4.2 + Math.pow(rEarth, 0.55) * 2.4));
+          p._schematicAdjusted = true;
+        }
+
         p._resolvedAU = resolvePlanetAU(sys, p);
         if (!p.realDistAU || parseFloat(p.realDistAU) <= 0) {
           p.realDistAU = parseFloat(p._resolvedAU.toFixed(4));
@@ -1082,21 +1228,21 @@
         }
       });
 
-      const rawStarR = Number(sys.star.radius) || 24;
-      const schematicStarR = Math.max(12, Math.min(24, rawStarR));
+      const rawStarR = Number(sys.star.radius) || 20;
+      const schematicStarR = Math.max(12, Math.min(20, rawStarR));
       sys.star._safeSchematicRadius = schematicStarR;
 
       const sorted = [...sys.planets].sort((a, b) => a._resolvedAU - b._resolvedAU);
 
       const minAU = Math.max(0.001, sorted[0]._resolvedAU);
       const maxAU = Math.max(minAU * 1.0001, sorted[sorted.length - 1]._resolvedAU);
-      const minSafeSchematicDist = schematicStarR + 26;
+      const minSafeSchematicDist = schematicStarR + 28;
       const maxTargetSchematicDist = Math.max(minSafeSchematicDist + 45, Math.min(340, minSafeSchematicDist + sorted.length * 48));
 
-      let prevOuterEdge = schematicStarR + 10;
+      let prevOuterEdge = schematicStarR + 12;
 
       sorted.forEach((p, idx) => {
-        const origSize = Number(p.size) || 6;
+        const origSize = p._computedSchematicSize || Number(p.size) || 6;
 
         let candidateDist;
         if (sorted.length === 1) {
@@ -1109,19 +1255,19 @@
         }
 
         const ringMultiplier = p.hasRing ? 1.85 : 1.05;
-        let maxAllowedSize = (candidateDist - schematicStarR - 8) / ringMultiplier;
+        let maxAllowedSize = (candidateDist - schematicStarR - 10) / ringMultiplier;
 
-        let safeSize = Math.min(origSize, 13);
+        let safeSize = Math.min(origSize, 14);
         if (maxAllowedSize < safeSize) {
           safeSize = Math.max(3.0, maxAllowedSize);
         }
 
-        const absoluteMinDist = schematicStarR + (safeSize * ringMultiplier) + 9;
+        const absoluteMinDist = schematicStarR + (safeSize * ringMultiplier) + 12;
         if (candidateDist < absoluteMinDist) {
           candidateDist = absoluteMinDist;
         }
 
-        const minStepFromPrev = prevOuterEdge + (safeSize * ringMultiplier) + 14;
+        const minStepFromPrev = prevOuterEdge + (safeSize * ringMultiplier) + 15;
         if (candidateDist < minStepFromPrev) {
           candidateDist = minStepFromPrev;
         }
@@ -1150,24 +1296,7 @@
         sys._safeHzMax = Math.max(sys._safeHzMin + 16, Number(sys.hzMax));
       }
 
-      const solarR = sys.star.realRadiusSolar !== undefined ? Number(sys.star.realRadiusSolar) : 1.0;
-      const realStarPx = Math.max(2.4, solarR * REAL_SOLAR_RADIUS_PX);
-      const baseAuScale = sys.realAuScale || 135;
-
-      let minRealisticAuScale = baseAuScale;
-      sorted.forEach(p => {
-        const au = p._resolvedAU;
-        if (au > 0) {
-          const pRealPx = Math.max(0.65, (Number(p.realRadiusEarth) || 1) * REAL_EARTH_RADIUS_PX);
-          const ringMult = p.hasRing ? 1.85 : 1.05;
-          const requiredPx = realStarPx + (pRealPx * ringMult) + 5;
-          const neededScale = requiredPx / au;
-          if (neededScale > minRealisticAuScale) {
-            minRealisticAuScale = neededScale;
-          }
-        }
-      });
-      sys._safeRealAuScale = minRealisticAuScale;
+      sys._safeRealAuScale = REAL_AU_BASE_PX;
     }
 
     const filteredSystemsData = {};
@@ -1405,15 +1534,15 @@
 
     // --- Safe Scale Helpers ---
     function getAuScale(sys) {
-      return sys._safeRealAuScale || sys.realAuScale || 135;
+      return sys._safeRealAuScale || REAL_AU_BASE_PX;
     }
 
     function getStarBaseRadius(sys) {
       if (!isRealisticScale) {
-        return sys.star._safeSchematicRadius || Number(sys.star.radius) || 22;
+        return sys.star._safeSchematicRadius || Number(sys.star.radius) || 18;
       }
-      const solarR = sys.star.realRadiusSolar !== undefined ? sys.star.realRadiusSolar : 1.0;
-      return Math.max(2.4, solarR * REAL_SOLAR_RADIUS_PX);
+      const solarR = sys.star._parsedSolarR !== undefined ? sys.star._parsedSolarR : parseStarSolarRadius(sys);
+      return Math.max(1.2, solarR * REAL_SOLAR_RADIUS_PX);
     }
 
     function getPlanetSchematicSize(p) {
@@ -1421,10 +1550,11 @@
     }
 
     function getPlanetRealRadius(p) {
-      const earthR = p.realRadiusEarth !== undefined ? p.realRadiusEarth : (p.size / 8);
-      return Math.max(0.65, earthR * REAL_EARTH_RADIUS_PX);
+      const earthR = p._parsedEarthR !== undefined ? p._parsedEarthR : parsePlanetEarthRadius(p);
+      return Math.max(0.08, earthR * REAL_EARTH_RADIUS_PX);
     }
 
+    // --- แก้ไข getPlanetDist ให้โหมด Realistic ใช้ระยะ AU จริง 100% ไม่บีบดาววงในมาซ้อนกัน ---
     function getPlanetDist(sys, p) {
       const starR = getStarBaseRadius(sys);
       const ringMult = p.hasRing ? 1.85 : 1.05;
@@ -1432,13 +1562,51 @@
       if (!isRealisticScale) {
         const baseDist = p._safeSchematicDist !== undefined ? p._safeSchematicDist : Number(p.dist);
         const pSize = getPlanetSchematicSize(p);
-        return Math.max(baseDist, starR + pSize * ringMult + 8);
+        return Math.max(baseDist, starR + pSize * ringMult + 14);
       }
 
+      // โหมด Realistic: ใช้สัดส่วนทางดาราศาสตร์จริง ไม่บีบระยะขั้นต่ำเพื่อให้ดาวเคราะห์วงใน (เช่น TRAPPIST-1 b,c,d) แยกวงโคจรชัดเจน
       const au = p._resolvedAU || resolvePlanetAU(sys, p);
-      const rawDist = au * getAuScale(sys);
-      const pRealR = getPlanetRealRadius(p);
-      return Math.max(rawDist, starR + pRealR * ringMult + 4.5);
+      return au * getAuScale(sys);
+    }
+
+    // --- ปรับซูมกล้องอัตโนมัติให้พอดีกับขนาดระบบดาว (เช่น TRAPPIST-1 ในโหมด Realistic) ---
+    function autoFitCameraForSystem() {
+      const sys = systemsData[currentSystemId];
+      if (!sys || !sys.planets || sys.planets.length === 0) return;
+
+      let maxOrbitPx = getStarBaseRadius(sys) * 2;
+      sys.planets.forEach(p => {
+        const d = getPlanetDist(sys, p);
+        if (d > maxOrbitPx) maxOrbitPx = d;
+      });
+
+      if (!isRealisticScale) {
+        panX = 0;
+        panY = 0;
+        zoom2D = 1;
+        if (camera3D && controls3D) {
+          camera3D.position.set(0, 450, 650);
+          controls3D.target.set(0, 0, 0);
+          controls3D.update();
+        }
+        return;
+      }
+
+      const minScreenDim = Math.min(window.innerWidth, window.innerHeight);
+      const targetScreenRadius = minScreenDim * 0.36;
+      const idealZoom2D = Math.max(0.15, Math.min(22.0, targetScreenRadius / Math.max(1, maxOrbitPx)));
+
+      panX = 0;
+      panY = 0;
+      zoom2D = idealZoom2D;
+
+      if (camera3D && controls3D) {
+        const fitDist3D = Math.max(6, Math.min(9000, maxOrbitPx * 2.4));
+        camera3D.position.set(0, fitDist3D * 0.65, fitDist3D * 0.95);
+        controls3D.target.set(0, 0, 0);
+        controls3D.update();
+      }
     }
 
     function getHZBounds(sys) {
@@ -1883,22 +2051,10 @@
     }
 
     function resetAllViewCameras() {
-      panX = 0;
-      panY = 0;
-      zoom2D = 1;
       isDragging2D = false;
       isTouchPanning2D = false;
       isTouchPinching2D = false;
-
-      if (camera3D && controls3D) {
-        if (typeof controls3D.reset === "function") {
-          controls3D.reset();
-        } else {
-          camera3D.position.set(0, 450, 650);
-          controls3D.target.set(0, 0, 0);
-          controls3D.update();
-        }
-      }
+      autoFitCameraForSystem();
     }
 
     function selectSystem(systemId) {
@@ -1921,10 +2077,10 @@
       
       sys.planets.forEach(p => { if (p.angle === undefined) p.angle = Math.random() * Math.PI * 2; });
 
-      resetAllViewCameras();
       closeInfoDrawer();
       updateTrackingUI();
       build3DScene();
+      resetAllViewCameras();
     }
 
     // --- 2D Starfield Background Generator ---
@@ -1967,7 +2123,7 @@
       ctx2D.restore();
     }
 
-    // --- 2D Engine ---
+    // --- 2D Engine (สัดส่วน 1:1 จริง วงโคจรกลมสมมาตรและดาวฤกษ์อยู่ตรงกลางเป๊ะ) ---
     function init2D() {
       canvas2D = document.getElementById("solar2dCanvas");
       ctx2D = canvas2D.getContext("2d");
@@ -1995,8 +2151,8 @@
       window.addEventListener("mouseup", () => isDragging2D = false);
       canvas2D.addEventListener("wheel", e => {
         e.preventDefault();
-        const zoomFactor = e.deltaY < 0 ? 1.12 : 0.88;
-        zoom2D = Math.max(0.05, Math.min(8.0, zoom2D * zoomFactor));
+        const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
+        zoom2D = Math.max(0.05, Math.min(25.0, zoom2D * zoomFactor));
       }, { passive: false });
 
       canvas2D.addEventListener("click", handle2DClick);
@@ -2052,7 +2208,7 @@
 
           if (lastPinchDist > 0) {
             const scaleFactor = dist / lastPinchDist;
-            const newZoom = Math.max(0.05, Math.min(8.0, zoom2D * scaleFactor));
+            const newZoom = Math.max(0.05, Math.min(25.0, zoom2D * scaleFactor));
             const worldX = (lastPinchCenterX - (canvas2D.width / 2 + panX)) / zoom2D;
             const worldY = (lastPinchCenterY - (canvas2D.height / 2 + panY)) / zoom2D;
             panX = centerX - canvas2D.width / 2 - worldX * newZoom;
@@ -2087,8 +2243,10 @@
     }
 
     function resize2DCanvas() {
-      canvas2D.width = window.innerWidth;
-      canvas2D.height = window.innerHeight;
+      if (!canvas2D) return;
+      const rect = canvas2D.getBoundingClientRect();
+      canvas2D.width = Math.max(1, Math.floor(rect.width));
+      canvas2D.height = Math.max(1, Math.floor(rect.height));
     }
 
     function drawGreenTrackingHighlight2D(x, y, radius) {
@@ -2117,6 +2275,10 @@
     function render2D() {
       if (viewMode !== "2d") return;
 
+      if (canvas2D.width !== canvas2D.clientWidth || canvas2D.height !== canvas2D.clientHeight) {
+        resize2DCanvas();
+      }
+
       const sys = systemsData[currentSystemId];
 
       if (trackedObject) {
@@ -2143,6 +2305,9 @@
       ctx2D.translate(centerX, centerY);
       ctx2D.scale(zoom2D, zoom2D);
 
+      const baseStarRadius = getStarBaseRadius(sys);
+      const starRadius = isRealisticScale ? baseStarRadius : Math.min(20, Math.max(12, baseStarRadius));
+
       // Draw Habitable Zone Glow Layer
       const hz = getHZBounds(sys);
       if (showHabitableZone && hz.min && hz.max) {
@@ -2165,15 +2330,15 @@
         ctx2D.stroke();
       }
 
-      // Draw Orbit Lines
+      // Draw Orbit Lines (วงกลมสมมาตรรอบจุด 0,0)
       if (showOrbits) {
         const zoomBoost = zoom2D < 1 ? Math.min(0.45, (1 - zoom2D) * 0.48) : 0;
         sys.planets.forEach(p => {
-          const r = getPlanetDist(sys, p);
+          const r = isRealisticScale ? getPlanetDist(sys, p) : Math.max(getPlanetDist(sys, p), starRadius + 24);
           const isTracked = isObjectTracked(p);
           ctx2D.beginPath();
           ctx2D.arc(0, 0, r, 0, Math.PI * 2);
-          const baseAlpha = isTracked ? 0.75 : (p.habitable ? 0.45 : 0.22);
+          const baseAlpha = isTracked ? 0.75 : (p.habitable ? 0.45 : 0.25);
           const finalAlpha = Math.min(0.9, baseAlpha + zoomBoost);
           ctx2D.strokeStyle = isTracked
             ? `rgba(34, 197, 94, ${finalAlpha})`
@@ -2187,10 +2352,7 @@
         });
       }
 
-      // Draw Host Star
-      const baseStarRadius = getStarBaseRadius(sys);
-      const starRadius = Math.max(baseStarRadius, 2.5 / zoom2D);
-
+      // Draw Host Star ตรงกลาง (0, 0)
       if (realisticLighting) {
         const coronaR = starRadius * 3.8;
         const coronaGrad = ctx2D.createRadialGradient(0, 0, starRadius * 0.85, 0, 0, coronaR);
@@ -2224,18 +2386,11 @@
         ctx2D.fillText(starLabelText, 0, starRadius + (16 / zoom2D));
       }
 
-      // Draw Planets
+      // Draw Planets บนเส้นวงโคจรพอดี
       sys.planets.forEach(p => {
-        const dist = getPlanetDist(sys, p);
+        const dist = isRealisticScale ? getPlanetDist(sys, p) : Math.max(getPlanetDist(sys, p), starRadius + 24);
         const baseSize = isRealisticScale ? getPlanetRealRadius(p) : getPlanetSchematicSize(p);
-        const minPixelFloor = isRealisticScale ? 1.4 / zoom2D : 2.8 / zoom2D;
-        let size = Math.max(baseSize, minPixelFloor);
-
-        const ringMult = p.hasRing ? 1.85 : 1.05;
-        const maxGapRadius = (dist - starRadius - (2 / zoom2D)) / ringMult;
-        if (maxGapRadius > 0 && size > maxGapRadius) {
-          size = Math.max(1.2 / zoom2D, maxGapRadius);
-        }
+        let size = isRealisticScale ? baseSize : Math.max(baseSize, 2.8 / zoom2D);
 
         const x = Math.cos(p.angle) * dist;
         const y = Math.sin(p.angle) * dist;
@@ -2284,7 +2439,7 @@
           ctx2D.strokeStyle = realisticLighting
             ? "rgba(230, 194, 128, 0.42)"
             : "rgba(230, 194, 128, 0.5)";
-          ctx2D.lineWidth = 2 / zoom2D;
+          ctx2D.lineWidth = Math.max(size * 0.16, 0.8 / zoom2D);
           ctx2D.stroke();
         }
 
@@ -2323,14 +2478,14 @@
       const sys = systemsData[currentSystemId];
 
       const baseStarR = getStarBaseRadius(sys);
-      const starR = Math.max(baseStarR, 10 / zoom2D);
+      const starR = Math.max(isRealisticScale ? baseStarR : Math.min(20, Math.max(12, baseStarR)), 10 / zoom2D);
       if (Math.hypot(worldX, worldY) <= starR) {
         showInfoDrawer(sys.star, "star");
         return;
       }
 
       for (let p of sys.planets) {
-        const dist = getPlanetDist(sys, p);
+        const dist = isRealisticScale ? getPlanetDist(sys, p) : Math.max(getPlanetDist(sys, p), starR + 24);
         const px = Math.cos(p.angle) * dist;
         const py = Math.sin(p.angle) * dist;
         const baseSize = isRealisticScale ? getPlanetRealRadius(p) : getPlanetSchematicSize(p);
@@ -2349,7 +2504,6 @@
     }
 
     // --- 3D Engine ---
-    // แสงฟุ้งรอบดาวฤกษ์ด้วย Pure GLSL Fragment Shader (ไม่มี Texture Sampling จึงไม่มีจุดสีแตกบน Apple/iPad GPU)
     function createSmoothStarGlowMesh(starRadius, starColorHex) {
       const glowRadius = starRadius * 3.8;
       const geo = new THREE.PlaneGeometry(glowRadius * 2, glowRadius * 2);
@@ -2364,7 +2518,6 @@
           varying vec2 vUv;
           void main() {
             vUv = uv;
-            // Billboard ให้หันเข้าหากล้องเสมอในทุกมุมหมุน 3D
             vec4 mvCenter = modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0);
             mvCenter.xy += position.xy;
             gl_Position = projectionMatrix * mvCenter;
@@ -2379,7 +2532,6 @@
             float dist = length(centered);
             if (dist >= 1.0) discard;
 
-            // ไล่ระดับความฟุ้งจากขอบดาว (dist ~ 0.25) ออกไปจนจางสนิทที่ขอบนอก (dist = 1.0)
             float t = clamp((dist - 0.24) / 0.76, 0.0, 1.0);
             float falloff = pow(1.0 - t, 2.6);
             float alpha = falloff * 0.46;
@@ -2441,7 +2593,7 @@
       const container = document.getElementById("canvas-container-3d");
       scene3D = new THREE.Scene();
 
-      camera3D = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 30000);
+      camera3D = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.05, 30000);
       camera3D.position.set(0, 450, 650);
 
       renderer3D = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
@@ -2454,6 +2606,7 @@
       controls3D = new THREE.OrbitControls(camera3D, renderer3D.domElement);
       controls3D.enableDamping = true;
       controls3D.dampingFactor = 0.05;
+      controls3D.minDistance = 0.3;
       controls3D.maxDistance = 15000;
       controls3D.enableRotate = true;
       controls3D.enableZoom = true;
@@ -2538,14 +2691,13 @@
 
       const sys = systemsData[currentSystemId];
 
-      const starR = isRealisticScale ? getStarBaseRadius(sys) * 0.8 : getStarBaseRadius(sys) * 0.7;
+      const starR = isRealisticScale ? getStarBaseRadius(sys) : getStarBaseRadius(sys) * 0.7;
       const starGeo = new THREE.SphereGeometry(starR, 32, 32);
       const starMat = new THREE.MeshBasicMaterial({ color: sys.star.color });
       starMesh3D = new THREE.Mesh(starGeo, starMat);
       starMesh3D.userData = { data: sys.star, type: "star", baseRadius: starR };
       scene3D.add(starMesh3D);
 
-      // แสงฟุ้งรอบดาวฤกษ์แบบ Pure Math Shader (เนียนสนิท ไม่มีจุดสีแตกบน iPad)
       starGlowMesh3D = createSmoothStarGlowMesh(starR, sys.star.color);
       starGlowMesh3D.visible = realisticLighting;
       starMesh3D.add(starGlowMesh3D);
@@ -2592,12 +2744,12 @@
 
       sys.planets.forEach(p => {
         const dist = getPlanetDist(sys, p);
-        let size = isRealisticScale ? Math.max(0.8, getPlanetRealRadius(p) * 0.8) : getPlanetSchematicSize(p) * 0.6;
+        let size = isRealisticScale ? getPlanetRealRadius(p) : getPlanetSchematicSize(p) * 0.6;
 
         const ringMult = p.hasRing ? 2.1 : 1.05;
-        const max3DSize = (dist - starR - 2) / ringMult;
+        const max3DSize = (dist - starR - 1.0) / ringMult;
         if (max3DSize > 0 && size > max3DSize) {
-          size = Math.max(0.6, max3DSize);
+          size = Math.max(0.08, max3DSize);
         }
 
         const orbitGeo = new THREE.BufferGeometry();
@@ -2657,7 +2809,7 @@
     function update3DPlanets() {
       const sys = systemsData[currentSystemId];
       const camDist = camera3D.position.distanceTo(controls3D.target);
-      const zoomScaleBoost = camDist > 900 ? Math.min(6, camDist / 900) : 1;
+      const zoomScaleBoost = isRealisticScale ? 1 : (camDist > 900 ? Math.min(6, camDist / 900) : 1);
       const starR = starMesh3D ? (starMesh3D.userData.baseRadius || 15) : 15;
 
       let trackedMesh3D = null;
@@ -2672,7 +2824,7 @@
 
         const ringMult = p.hasRing ? 2.1 : 1.05;
         const maxScale = Math.max(1, (dist - starR - 1.5) / (item.baseSize * ringMult));
-        const appliedScale = Math.min(zoomScaleBoost, maxScale);
+        const appliedScale = isRealisticScale ? 1 : Math.min(zoomScaleBoost, maxScale);
 
         item.mesh.scale.setScalar(appliedScale);
         item.currentWorldRadius = item.baseSize * appliedScale;
@@ -2699,7 +2851,7 @@
           trackRing3D.visible = true;
           trackRing3D.position.copy(currentPos);
           const pulse = 1 + 0.08 * Math.sin(performance.now() * 0.006);
-          trackRing3D.scale.setScalar(trackedRadius3D * pulse);
+          trackRing3D.scale.setScalar(Math.max(trackedRadius3D, 0.35) * pulse);
         }
       } else if (trackRing3D) {
         trackRing3D.visible = false;
@@ -2836,6 +2988,7 @@
         btn3d.className = "px-2.5 md:px-3 py-1 md:py-1.5 text-[11px] md:text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all";
         container2d.classList.remove("hidden");
         container3d.classList.add("hidden");
+        resize2DCanvas();
       } else {
         btn3d.className = "px-2.5 md:px-3 py-1 md:py-1.5 text-[11px] md:text-xs font-semibold rounded-md bg-blue-600 text-white transition-all shadow-md";
         btn2d.className = "px-2.5 md:px-3 py-1 md:py-1.5 text-[11px] md:text-xs font-semibold rounded-md text-slate-400 hover:text-white transition-all";
@@ -2878,6 +3031,7 @@
       isRealisticScale = !isRealisticScale;
       document.getElementById("scale-mode-text").innerText = isRealisticScale ? "Realistic" : "Schematic";
       build3DScene();
+      autoFitCameraForSystem();
       if (trackedObject) startTracking(trackedObject);
     }
 
@@ -2922,7 +3076,7 @@
       document.getElementById("info-name").innerText = type === "star" ? getDisplayStarName(sys) : getDisplayPlanetName(item);
       document.getElementById("info-desc").innerText = getDisplayDesc(item, sys);
       document.getElementById("info-mass").innerText = item.mass || "-";
-      document.getElementById("info-radius").innerText = (type === "star" ? (item.displayRadius || "1.00 R☉") : item.radius) || "-";
+      document.getElementById("info-radius").innerText = (type === "star" ? (item.displayRadius || `${(item._parsedSolarR || 1).toFixed(2)} R☉`) : (item.radius || `${(item._parsedEarthR || 1).toFixed(2)} R⊕`)) || "-";
       document.getElementById("info-period").innerText = type === "star" ? "N/A" : `${item.periodDays} ${t("earthDays")}`;
       document.getElementById("info-temp").innerText = item.temp || "-";
       document.getElementById("info-funfact").innerText = getDisplayFunFact(item, sys);
@@ -3065,7 +3219,7 @@
           realDistAU: parseFloat(au.toFixed(3)),
           periodDays: estimatedPeriodDays,
           mass: "1.0 M⊕ (Estimated)",
-          radius: "1.0 R⊕",
+          radius: `${(size / 6).toFixed(2)} R⊕`,
           temp: habitable ? "280 K" : "400 K",
           habitable: habitable,
           desc: "ดาวเคราะห์ที่สร้างขึ้นโดยผู้ใช้งาน",
@@ -3084,11 +3238,11 @@
         hzMax: 150,
         hzMinAU: 70 / 135,
         hzMaxAU: 150 / 135,
-        realAuScale: 135,
+        realAuScale: REAL_AU_BASE_PX,
         isCustom: true,
         star: {
           name: starName,
-          radius: 28,
+          radius: 20,
           displayRadius: "1.00 R☉",
           realRadiusSolar: 1.0,
           color: starColor,
