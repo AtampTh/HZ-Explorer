@@ -981,14 +981,14 @@
       requestAnimationFrame(updateLoader);
     }
 
-    // --- True Astronomical Scale Constants (บัญญัติไตรยางศ์ 1:1 ขยายขนาดดาวฤกษ์ ดาวเคราะห์ และระยะทางขึ้น 5 เท่า) ---
+    // --- True Astronomical Scale Constants (บัญญัติไตรยางศ์ 1:1 ขยายขนาดดาวฤกษ์ ดาวเคราะห์ และระยะทางขึ้น 10 เท่า) ---
     // 1 AU = 149,597,871 km | 1 R☉ = 695,700 km | 1 R⊕ = 6,371 km
     const AU_TO_SOLAR_RADII = 149597870.7 / 695700; // ~215.032
     const SOLAR_TO_EARTH_RADII = 695700 / 6371;     // ~109.198
-    const REALISTIC_BODY_SCALE = 5.0;               // ขยายขนาดดาวฤกษ์ขึ้น 5 เท่า แล้วเทียบบัญญัติไตรยางศ์ทั้งขนาดดาวเคราะห์และระยะห่างตามสัดส่วนจริง 1:1
-    const REAL_AU_BASE_PX = 240 * REALISTIC_BODY_SCALE; // 1,200 px/AU (1 AU = 215.032 R☉ เป๊ะ)
-    const REAL_SOLAR_RADIUS_PX = REAL_AU_BASE_PX / AU_TO_SOLAR_RADII; // 5.5806 px
-    const REAL_EARTH_RADIUS_PX = REAL_SOLAR_RADIUS_PX / SOLAR_TO_EARTH_RADII; // 0.0511 px
+    const REALISTIC_BODY_SCALE = 10.0;              // ขยายขนาดดาวฤกษ์ขึ้น 10 เท่า แล้วเทียบบัญญัติไตรยางศ์ทั้งขนาดดาวเคราะห์และระยะห่างตามสัดส่วนจริง 1:1
+    const REAL_AU_BASE_PX = 240 * REALISTIC_BODY_SCALE; // 2,400 px/AU (1 AU = 215.032 R☉ เป๊ะ)
+    const REAL_SOLAR_RADIUS_PX = REAL_AU_BASE_PX / AU_TO_SOLAR_RADII; // 11.1611 px
+    const REAL_EARTH_RADIUS_PX = REAL_SOLAR_RADIUS_PX / SOLAR_TO_EARTH_RADII; // 0.1022 px
 
     const defaultSystemsData = {
       "sol": {
@@ -1587,7 +1587,7 @@
       }
     }
 
-    // --- Astronomical Scale Helpers (บัญญัติไตรยางศ์ 1:1 ขยายขนาดดาวฤกษ์ ดาวเคราะห์ และระยะทางขึ้น 5 เท่า) ---
+    // --- Astronomical Scale Helpers (บัญญัติไตรยางศ์ 1:1 ขยายขนาดดาวฤกษ์ ดาวเคราะห์ และระยะทางขึ้น 10 เท่า) ---
     function getAuScale(sys) {
       return sys._safeRealAuScale || REAL_AU_BASE_PX;
     }
@@ -1597,7 +1597,7 @@
         return sys.star._safeSchematicRadius || Number(sys.star.radius) || 18;
       }
       const solarR = sys.star._parsedSolarR !== undefined ? sys.star._parsedSolarR : parseStarSolarRadius(sys);
-      return Math.max(0.15, solarR * REAL_SOLAR_RADIUS_PX);
+      return Math.max(0.25, solarR * REAL_SOLAR_RADIUS_PX);
     }
 
     function getPlanetSchematicSize(p) {
@@ -1606,7 +1606,7 @@
 
     function getPlanetRealRadius(p) {
       const earthR = p._parsedEarthR !== undefined ? p._parsedEarthR : parsePlanetEarthRadius(p);
-      return Math.max(0.015, earthR * REAL_EARTH_RADIUS_PX);
+      return Math.max(0.02, earthR * REAL_EARTH_RADIUS_PX);
     }
 
     function getPlanetDist(sys, p) {
@@ -1627,12 +1627,6 @@
       const sys = systemsData[currentSystemId];
       if (!sys || !sys.planets || sys.planets.length === 0) return;
 
-      let maxOrbitPx = getStarBaseRadius(sys) * 2;
-      sys.planets.forEach(p => {
-        const d = getPlanetDist(sys, p);
-        if (d > maxOrbitPx) maxOrbitPx = d;
-      });
-
       if (!isRealisticScale) {
         panX = 0;
         panY = 0;
@@ -1645,17 +1639,24 @@
         return;
       }
 
-      const minScreenDim = Math.min(window.innerWidth, window.innerHeight);
-      const targetScreenRadius = minScreenDim * 0.36;
-      const idealZoom2D = Math.max(0.02, Math.min(40.0, targetScreenRadius / Math.max(0.5, maxOrbitPx)));
+      // ซูมเข้าไปที่ดาวฤกษ์ให้ขนาดปรากฏบนหน้าจอใหญ่พอดีเหมือนในภาพตัวอย่าง (รัศมีปรากฏ ~26 px)
+      // เพื่อให้เห็นตัวดาวฤกษ์และดาวเคราะห์วงในชัดเจนตั้งแต่กดเข้าระบบ
+      const starR = getStarBaseRadius(sys);
+      const targetStarScreenR = 26;
+      const idealZoom2D = Math.max(0.05, Math.min(80.0, targetStarScreenR / Math.max(0.25, starR)));
 
       panX = 0;
       panY = 0;
       zoom2D = idealZoom2D;
 
       if (camera3D && controls3D) {
-        const fitDist3D = Math.max(5, Math.min(45000, maxOrbitPx * 2.4));
-        camera3D.position.set(0, fitDist3D * 0.65, fitDist3D * 0.95);
+        // คำนวณระยะกล้อง 3D ให้ดาวฤกษ์มีขนาดปรากฏบนหน้าจอใกล้เคียงกับ 2D
+        const vFovRad = (camera3D.fov * Math.PI) / 180;
+        const halfScreenH = Math.max(200, window.innerHeight * 0.5);
+        const targetDist3D = (starR * halfScreenH) / (targetStarScreenR * Math.tan(vFovRad / 2));
+        const fitDist3D = Math.max(1.5, Math.min(45000, targetDist3D));
+
+        camera3D.position.set(0, fitDist3D * 0.48, fitDist3D * 0.88);
         controls3D.target.set(0, 0, 0);
         controls3D.update();
       }
@@ -2204,7 +2205,7 @@
       canvas2D.addEventListener("wheel", e => {
         e.preventDefault();
         const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
-        zoom2D = Math.max(0.01, Math.min(250.0, zoom2D * zoomFactor));
+        zoom2D = Math.max(0.005, Math.min(500.0, zoom2D * zoomFactor));
       }, { passive: false });
 
       canvas2D.addEventListener("click", handle2DClick);
@@ -2260,7 +2261,7 @@
 
           if (lastPinchDist > 0) {
             const scaleFactor = dist / lastPinchDist;
-            const newZoom = Math.max(0.01, Math.min(250.0, zoom2D * scaleFactor));
+            const newZoom = Math.max(0.005, Math.min(500.0, zoom2D * scaleFactor));
             const worldX = (lastPinchCenterX - (canvas2D.width / 2 + panX)) / zoom2D;
             const worldY = (lastPinchCenterY - (canvas2D.height / 2 + panY)) / zoom2D;
             panX = centerX - canvas2D.width / 2 - worldX * newZoom;
@@ -2421,7 +2422,7 @@
       ctx2D.arc(0, 0, starRadius, 0, Math.PI * 2);
       ctx2D.fillStyle = sys.star.color;
       ctx2D.shadowColor = sys.star.color;
-      ctx2D.shadowBlur = realisticLighting ? 38 : (isRealisticScale ? 15 : 30);
+      ctx2D.shadowBlur = realisticLighting ? 38 : (isRealisticScale ? 20 : 30);
       ctx2D.fill();
       ctx2D.shadowBlur = 0;
 
@@ -2645,7 +2646,7 @@
       const container = document.getElementById("canvas-container-3d");
       scene3D = new THREE.Scene();
 
-      camera3D = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.002, 120000);
+      camera3D = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.001, 160000);
       camera3D.position.set(0, 450, 650);
 
       renderer3D = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
@@ -2658,8 +2659,8 @@
       controls3D = new THREE.OrbitControls(camera3D, renderer3D.domElement);
       controls3D.enableDamping = true;
       controls3D.dampingFactor = 0.05;
-      controls3D.minDistance = 0.01;
-      controls3D.maxDistance = 60000;
+      controls3D.minDistance = 0.005;
+      controls3D.maxDistance = 90000;
       controls3D.enableRotate = true;
       controls3D.enableZoom = true;
       controls3D.enablePan = true;
@@ -2801,7 +2802,7 @@
         const ringMult = p.hasRing ? 2.1 : 1.05;
         const max3DSize = (dist - starR - 0.05) / ringMult;
         if (max3DSize > 0 && size > max3DSize) {
-          size = Math.max(0.015, max3DSize);
+          size = Math.max(0.02, max3DSize);
         }
 
         const orbitGeo = new THREE.BufferGeometry();
