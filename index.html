@@ -887,7 +887,6 @@
       const searchInput = document.getElementById("system-search-input");
       if (searchInput) searchInput.placeholder = t("searchPlaceholder");
 
-      // Update current system subtitle
       const sys = systemsData[currentSystemId];
       if (sys) {
         const feat = sys._featured;
@@ -905,13 +904,11 @@
       renderSystemList();
       updateTrackingUI();
 
-      // Refresh Info Drawer if open
       if (selectedObject && sys) {
         const isStar = selectedObject === sys.star;
         showInfoDrawer(selectedObject, isStar ? "star" : "planet");
       }
 
-      // Refresh 3D labels
       if (starLabel3D && sys) {
         const sName = getDisplayStarName(sys);
         starLabel3D.textContent = sys._featured ? `★ ${sName}` : sName;
@@ -985,8 +982,8 @@
     }
 
     // --- Prominent NASA-Verified Stellar Systems Database ---
-    const REAL_SOLAR_RADIUS_PX = 22;   // 1.00 R☉ = 22 px in Realistic mode
-    const REAL_EARTH_RADIUS_PX = 0.24; // Scaled relative to NASA solar/planetary radii
+    const REAL_SOLAR_RADIUS_PX = 22;
+    const REAL_EARTH_RADIUS_PX = 0.24;
 
     const defaultSystemsData = {
       "sol": {
@@ -1026,7 +1023,6 @@
       }
     };
 
-    // รวมระบบสุริยะของเรา (sol) + ข้อมูล NASA ทั้งหมดจากไฟล์ nasa_data.js + ระบบ Custom ของผู้ใช้
     const colabSystems = window.NASA_COLAB_SYSTEMS || {};
     let systemsData = Object.keys(colabSystems).length > 0
       ? { sol: defaultSystemsData.sol, ...colabSystems }
@@ -1174,7 +1170,6 @@
       sys._safeRealAuScale = minRealisticAuScale;
     }
 
-    // Calibrate, filter HZ-only systems, and attach Featured System bookmarks (5 systems)
     const filteredSystemsData = {};
     Object.entries(systemsData).forEach(([id, sys]) => {
       calibrateSystemOrbits(sys);
@@ -1195,14 +1190,14 @@
     // --- State Variables ---
     let currentSystemId = "sol";
     let systemSearchQuery = "";
-    let selectedPrefixFilter = ""; // "" | "__featured__" | prefix string
+    let selectedPrefixFilter = "";
     let isSystemSidebarOpen = window.innerWidth >= 768;
     let isSettingsOpen = false;
     let isPlanetStripOpen = true;
     let isSpeedBarOpen = true;
     let showStarfield = true;
     let realisticLighting = false;
-    let viewMode = "2d"; // '2d' or '3d'
+    let viewMode = "2d";
     let isPlaying = true;
     let timeSpeed = 1.0;
     let isRealisticScale = false;
@@ -1232,7 +1227,7 @@
 
     // 3D State
     let scene3D, camera3D, renderer3D, controls3D;
-    let ambientLight3D = null, dirLight3D = null, starLight3D = null, starGlowSprite3D = null;
+    let ambientLight3D = null, dirLight3D = null, starLight3D = null, starGlowMesh3D = null;
     let starGroup3D = null;
     let starMesh3D, planetMeshes3D = [], orbitLines3D = [], hzMesh3D = null, trackRing3D = null;
     let starLabel3D = null, planetLabels3D = [];
@@ -1351,14 +1346,6 @@
 
       if (renderer3D) renderer3D.setClearColor(showStarfield ? 0x010206 : 0x000000, 1);
       if (starGroup3D) starGroup3D.visible = showStarfield;
-
-      // อัปเดตสีพื้นหลังของแสงฟุ้งดาวฤกษ์ในโหมด 3D ให้กลืนกับท้องฟ้าพอดี
-      const sys = systemsData[currentSystemId];
-      if (starGlowSprite3D && sys) {
-        if (starGlowSprite3D.material.map) starGlowSprite3D.material.map.dispose();
-        starGlowSprite3D.material.map = createSmoothStarGlowTexture(sys.star.color);
-        starGlowSprite3D.material.needsUpdate = true;
-      }
     }
 
     function setRealisticLighting(enabled) {
@@ -1388,7 +1375,7 @@
         starLight3D.color.setHex(0xffffff);
         starLight3D.intensity = realisticLighting ? 2.4 : 1.5;
       }
-      if (starGlowSprite3D) starGlowSprite3D.visible = realisticLighting;
+      if (starGlowMesh3D) starGlowMesh3D.visible = realisticLighting;
       planetMeshes3D.forEach(item => {
         if (item.mesh && item.mesh.material) {
           item.mesh.material.roughness = realisticLighting ? 0.82 : 0.5;
@@ -1595,7 +1582,6 @@
 
       container.innerHTML = "";
 
-      // 1) ปุ่ม "★ ระบบดาวเด่น"
       if (featuredCount > 0) {
         const featBtn = document.createElement("button");
         featBtn.type = "button";
@@ -1608,7 +1594,6 @@
         container.appendChild(featBtn);
       }
 
-      // 2) ปุ่ม "ทั้งหมด"
       const allBtn = document.createElement("button");
       allBtn.type = "button";
       const isAllActive = selectedPrefixFilter === "";
@@ -1619,7 +1604,6 @@
       allBtn.onclick = () => selectPrefixFilter("");
       container.appendChild(allBtn);
 
-      // 3) ปุ่มคำขึ้นต้นอัตโนมัติ
       sortedPrefixes.forEach(([prefix, count]) => {
         const btn = document.createElement("button");
         btn.type = "button";
@@ -2365,42 +2349,61 @@
     }
 
     // --- 3D Engine ---
-    // สร้างแสงฟุ้งเนียนละเอียดแบบ 2D โดยไม่ใช้ AdditiveBlending (ป้องกันจุดสีแดง-เขียวแตกบน iPad)
-    function createSmoothStarGlowTexture(starColor) {
-      const size = 512;
-      const canvas = document.createElement("canvas");
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext("2d");
-      const half = size / 2;
+    // แสงฟุ้งรอบดาวฤกษ์ด้วย Pure GLSL Fragment Shader (ไม่มี Texture Sampling จึงไม่มีจุดสีแตกบน Apple/iPad GPU)
+    function createSmoothStarGlowMesh(starRadius, starColorHex) {
+      const glowRadius = starRadius * 3.8;
+      const geo = new THREE.PlaneGeometry(glowRadius * 2, glowRadius * 2);
+      const col = new THREE.Color(starColorHex);
 
-      // สีพื้นหลังท้องฟ้า (ใช้ RGB เดียวกับฉากหลังแต่ alpha = 0 เพื่อไม่ให้เกิดสีเพี้ยนเวลา bilinear filter)
-      const bgRgb = showStarfield ? "1, 2, 6" : "0, 0, 0";
-      const grad = ctx.createRadialGradient(half, half, half * 0.24, half, half, half);
-      grad.addColorStop(0.0, colorToRgba(starColor, 0.52));
-      grad.addColorStop(0.22, colorToRgba(starColor, 0.28));
-      grad.addColorStop(0.50, colorToRgba(starColor, 0.10));
-      grad.addColorStop(0.78, colorToRgba(starColor, 0.025));
-      grad.addColorStop(1.0, `rgba(${bgRgb}, 0)`);
+      const mat = new THREE.ShaderMaterial({
+        uniforms: {
+          uColor: { value: col }
+        },
+        vertexShader: `
+          precision highp float;
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            // Billboard ให้หันเข้าหากล้องเสมอในทุกมุมหมุน 3D
+            vec4 mvCenter = modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+            mvCenter.xy += position.xy;
+            gl_Position = projectionMatrix * mvCenter;
+          }
+        `,
+        fragmentShader: `
+          precision highp float;
+          uniform vec3 uColor;
+          varying vec2 vUv;
+          void main() {
+            vec2 centered = (vUv - vec2(0.5)) * 2.0;
+            float dist = length(centered);
+            if (dist >= 1.0) discard;
 
-      ctx.clearRect(0, 0, size, size);
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, size, size);
+            // ไล่ระดับความฟุ้งจากขอบดาว (dist ~ 0.25) ออกไปจนจางสนิทที่ขอบนอก (dist = 1.0)
+            float t = clamp((dist - 0.24) / 0.76, 0.0, 1.0);
+            float falloff = pow(1.0 - t, 2.6);
+            float alpha = falloff * 0.46;
 
-      const tex = new THREE.CanvasTexture(canvas);
-      tex.minFilter = THREE.LinearFilter;
-      tex.magFilter = THREE.LinearFilter;
-      tex.generateMipmaps = false;
-      tex.needsUpdate = true;
-      return tex;
+            if (alpha < 0.004) discard;
+            gl_FragColor = vec4(uColor, alpha);
+          }
+        `,
+        transparent: true,
+        blending: THREE.NormalBlending,
+        depthWrite: false,
+        depthTest: true
+      });
+
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.renderOrder = -1;
+      return mesh;
     }
 
     function init3DStars() {
       starGroup3D = new THREE.Group();
-      const createStarLayer = (count, pointSize, minBrightness, maxBrightness, opacity) => {
+      const createStarLayer = (count, pointSize, opacity) => {
         const geo = new THREE.BufferGeometry();
         const positions = new Float32Array(count * 3);
-        const colors = new Float32Array(count * 3);
 
         for (let i = 0; i < count; i++) {
           const u = Math.random();
@@ -2412,20 +2415,14 @@
           positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
           positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
           positions[i * 3 + 2] = radius * Math.cos(phi);
-
-          const b = minBrightness + Math.random() * (maxBrightness - minBrightness);
-          colors[i * 3] = b;
-          colors[i * 3 + 1] = b;
-          colors[i * 3 + 2] = Math.min(1, b + 0.04);
         }
 
         geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-        geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 
         const mat = new THREE.PointsMaterial({
+          color: 0xffffff,
           size: pointSize,
           sizeAttenuation: false,
-          vertexColors: true,
           transparent: true,
           opacity: opacity,
           depthWrite: false
@@ -2434,8 +2431,8 @@
         return new THREE.Points(geo, mat);
       };
 
-      starGroup3D.add(createStarLayer(950, 1.4, 0.45, 0.85, 0.85));
-      starGroup3D.add(createStarLayer(260, 2.3, 0.80, 1.0, 0.95));
+      starGroup3D.add(createStarLayer(950, 1.4, 0.65));
+      starGroup3D.add(createStarLayer(260, 2.2, 0.90));
       starGroup3D.visible = showStarfield;
       scene3D.add(starGroup3D);
     }
@@ -2447,7 +2444,7 @@
       camera3D = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 30000);
       camera3D.position.set(0, 450, 650);
 
-      renderer3D = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      renderer3D = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
       renderer3D.setClearColor(showStarfield ? 0x010206 : 0x000000, 1);
       renderer3D.setSize(window.innerWidth, window.innerHeight);
       renderer3D.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -2521,9 +2518,9 @@
       if (starMesh3D) scene3D.remove(starMesh3D);
       if (hzMesh3D) scene3D.remove(hzMesh3D);
       if (trackRing3D) scene3D.remove(trackRing3D);
-      if (starGlowSprite3D && starGlowSprite3D.material && starGlowSprite3D.material.map) {
-        starGlowSprite3D.material.map.dispose();
-        starGlowSprite3D.material.dispose();
+      if (starGlowMesh3D) {
+        if (starGlowMesh3D.geometry) starGlowMesh3D.geometry.dispose();
+        if (starGlowMesh3D.material) starGlowMesh3D.material.dispose();
       }
       planetMeshes3D.forEach(p => scene3D.remove(p.mesh));
       orbitLines3D.forEach(l => scene3D.remove(l));
@@ -2532,7 +2529,7 @@
       hzMesh3D = null;
       trackRing3D = null;
       starLight3D = null;
-      starGlowSprite3D = null;
+      starGlowMesh3D = null;
       starLabel3D = null;
       planetLabels3D = [];
 
@@ -2548,20 +2545,10 @@
       starMesh3D.userData = { data: sys.star, type: "star", baseRadius: starR };
       scene3D.add(starMesh3D);
 
-      // แสงฟุ้งรอบดาวฤกษ์แบบไล่เฉดเนียนสนิทเหมือน 2D (ใช้ NormalBlending แทน AdditiveBlending เพื่อไม่ให้เกิดจุดสีเพี้ยนบน iPad)
-      const glowTex = createSmoothStarGlowTexture(sys.star.color);
-      const glowMat = new THREE.SpriteMaterial({
-        map: glowTex,
-        transparent: true,
-        blending: THREE.NormalBlending,
-        depthWrite: false,
-        depthTest: true
-      });
-      starGlowSprite3D = new THREE.Sprite(glowMat);
-      starGlowSprite3D.scale.set(starR * 7.6, starR * 7.6, 1);
-      starGlowSprite3D.renderOrder = -1;
-      starGlowSprite3D.visible = realisticLighting;
-      starMesh3D.add(starGlowSprite3D);
+      // แสงฟุ้งรอบดาวฤกษ์แบบ Pure Math Shader (เนียนสนิท ไม่มีจุดสีแตกบน iPad)
+      starGlowMesh3D = createSmoothStarGlowMesh(starR, sys.star.color);
+      starGlowMesh3D.visible = realisticLighting;
+      starMesh3D.add(starGlowMesh3D);
 
       if (labelsContainer) {
         const sLabel = document.createElement("div");
