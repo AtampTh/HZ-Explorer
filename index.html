@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>HZ Explorer - แบบจำลองระบบดาว 2D/3D</title>
+  <title>HZ Explorer - 2D/3D Stellar Systems Simulation</title>
   
   <!-- Tailwind CSS & FontAwesome Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -193,14 +193,14 @@
                 Stellar Systems Explorer
               </h1>
               <span id="header-featured-badge" class="hidden px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300 text-[10px] font-semibold flex items-center gap-1 flex-shrink-0">
-                <i class="fa-solid fa-star text-[9px]"></i> ระบบเด่น
+                <i class="fa-solid fa-star text-[9px]"></i> <span id="header-featured-badge-text">ระบบเด่น</span>
               </span>
             </div>
             <p class="text-[11px] md:text-xs text-slate-400 truncate" id="current-system-subtitle">แบบจำลองระบบดาวแบบโต้ตอบ 2D / 3D</p>
           </div>
         </div>
 
-        <button id="btn-toggle-systems" onclick="toggleSystemSidebar()" class="px-2.5 py-1.5 rounded-lg bg-blue-600/30 hover:bg-blue-600/50 border border-blue-500/40 text-blue-300 text-xs font-semibold flex items-center gap-1.5 flex-shrink-0 transition-all" title="เปิด/ปิดแถบเลือกระบบดาว">
+        <button id="btn-toggle-systems" onclick="toggleSystemSidebar()" class="px-2.5 py-1.5 rounded-lg bg-blue-600/30 hover:bg-blue-600/50 border border-blue-500/40 text-blue-300 text-xs font-semibold flex items-center gap-1.5 flex-shrink-0 transition-all">
           <i class="fa-solid fa-sun text-amber-400"></i>
           <span id="btn-toggle-systems-text">ระบบดาว</span>
         </button>
@@ -223,26 +223,26 @@
           <i class="fa-solid fa-leaf"></i> <span>HZ: <strong id="hz-status-text">OFF</strong></span>
         </button>
 
-        <button id="btn-scale-toggle" onclick="toggleScaleMode()" class="px-2.5 md:px-3 py-1 md:py-1.5 text-[11px] md:text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all border border-slate-700" title="สลับอัตราส่วนดาว">
+        <button id="btn-scale-toggle" onclick="toggleScaleMode()" class="px-2.5 md:px-3 py-1 md:py-1.5 text-[11px] md:text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all border border-slate-700">
           <i class="fa-solid fa-ruler-combined mr-1 text-blue-400"></i> <span id="scale-mode-text">Schematic</span>
         </button>
 
         <div class="flex items-center gap-1.5">
-          <button id="btn-orbit-toggle" onclick="toggleOrbits()" class="p-1.5 md:p-2 text-xs rounded-lg bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 transition-all border border-blue-500/30" title="แสดง/ซ่อน เส้นโคจร">
+          <button id="btn-orbit-toggle" onclick="toggleOrbits()" class="p-1.5 md:p-2 text-xs rounded-lg bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 transition-all border border-blue-500/30">
             <i class="fa-solid fa-circle-notch"></i>
           </button>
 
-          <button id="btn-label-toggle" onclick="toggleLabels()" class="p-1.5 md:p-2 text-xs rounded-lg bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 transition-all border border-blue-500/30" title="แสดง/ซ่อน ป้ายชื่อ">
+          <button id="btn-label-toggle" onclick="toggleLabels()" class="p-1.5 md:p-2 text-xs rounded-lg bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 transition-all border border-blue-500/30">
             <i class="fa-solid fa-tag"></i>
           </button>
 
-          <button onclick="resetCamera()" class="p-1.5 md:p-2 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all border border-slate-700" title="รีเซ็ตมุมกล้อง">
+          <button id="btn-reset-camera" onclick="resetCamera()" class="p-1.5 md:p-2 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all border border-slate-700">
             <i class="fa-solid fa-arrows-to-dot"></i>
           </button>
 
-          <button id="btn-settings-toggle" onclick="toggleSettingsPanel()" class="px-2 md:px-2.5 py-1.5 md:py-2 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all border border-slate-700 flex items-center gap-1.5" title="ตั้งค่าการแสดงผล">
+          <button id="btn-settings-toggle" onclick="toggleSettingsPanel()" class="px-2 md:px-2.5 py-1.5 md:py-2 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all border border-slate-700 flex items-center gap-1.5">
             <i class="fa-solid fa-gear text-blue-400"></i>
-            <span class="hidden sm:inline font-semibold">ตั้งค่า</span>
+            <span id="settings-btn-label" class="hidden sm:inline font-semibold">ตั้งค่า</span>
           </button>
         </div>
       </div>
@@ -252,36 +252,55 @@
     <div id="settings-panel" class="hidden fixed top-24 sm:top-20 right-3 sm:right-6 w-72 sm:w-80 glass-panel p-4 rounded-2xl border border-blue-500/30 shadow-2xl pointer-events-auto z-30 text-xs space-y-4">
       <div class="flex justify-between items-center pb-2.5 border-b border-slate-700/60">
         <h3 class="font-bold text-white flex items-center gap-2 text-sm">
-          <i class="fa-solid fa-gear text-blue-400"></i> ตั้งค่าการแสดงผล
+          <i class="fa-solid fa-gear text-blue-400"></i> <span id="settings-modal-title">ตั้งค่าการแสดงผล</span>
         </h3>
         <button onclick="toggleSettingsPanel(false)" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800/70 transition-all">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
+      <!-- Language Selector (Thai / English Only) -->
       <div class="space-y-1.5">
         <div class="flex items-center justify-between">
           <span class="font-semibold text-slate-200 flex items-center gap-1.5">
-            <i class="fa-solid fa-star text-amber-300 text-[11px]"></i> พื้นหลังอวกาศ
+            <i class="fa-solid fa-language text-emerald-400 text-xs"></i> <span id="settings-lang-label">ภาษา (Language)</span>
           </span>
         </div>
         <div class="grid grid-cols-2 gap-1.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
-          <button type="button" id="btn-bg-stars" onclick="setStarfieldMode(true)" class="py-1.5 px-2 rounded-lg font-semibold text-[11px] bg-blue-600 text-white shadow transition-all flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-sparkles text-[10px]"></i> ดวงดาวประปราย
+          <button type="button" id="btn-lang-th" onclick="setLanguage('th')" class="py-1.5 px-2 rounded-lg font-semibold text-[11px] bg-blue-600 text-white shadow transition-all flex items-center justify-center gap-1.5">
+            ไทย
           </button>
-          <button type="button" id="btn-bg-black" onclick="setStarfieldMode(false)" class="py-1.5 px-2 rounded-lg font-semibold text-[11px] text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-square text-[10px]"></i> สีดำปกติ
+          <button type="button" id="btn-lang-en" onclick="setLanguage('en')" class="py-1.5 px-2 rounded-lg font-semibold text-[11px] text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1.5">
+            English
           </button>
         </div>
       </div>
 
+      <!-- Space Background -->
       <div class="space-y-1.5 pt-1 border-t border-slate-800/80">
         <div class="flex items-center justify-between">
           <span class="font-semibold text-slate-200 flex items-center gap-1.5">
-            <i class="fa-solid fa-circle-half-stroke text-amber-400 text-[11px]"></i> แสงเงาสมจริงจากดาวฤกษ์
+            <i class="fa-solid fa-star text-amber-300 text-[11px]"></i> <span id="settings-bg-label">พื้นหลังอวกาศ</span>
           </span>
         </div>
-        <p class="text-[10px] text-slate-400 leading-relaxed">
+        <div class="grid grid-cols-2 gap-1.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+          <button type="button" id="btn-bg-stars" onclick="setStarfieldMode(true)" class="py-1.5 px-2 rounded-lg font-semibold text-[11px] bg-blue-600 text-white shadow transition-all flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-sparkles text-[10px]"></i> <span id="settings-bg-stars-text">ดวงดาวประปราย</span>
+          </button>
+          <button type="button" id="btn-bg-black" onclick="setStarfieldMode(false)" class="py-1.5 px-2 rounded-lg font-semibold text-[11px] text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-square text-[10px]"></i> <span id="settings-bg-black-text">สีดำปกติ</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Realistic Star Lighting -->
+      <div class="space-y-1.5 pt-1 border-t border-slate-800/80">
+        <div class="flex items-center justify-between">
+          <span class="font-semibold text-slate-200 flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-half-stroke text-amber-400 text-[11px]"></i> <span id="settings-light-label">แสงเงาสมจริงจากดาวฤกษ์</span>
+          </span>
+        </div>
+        <p id="settings-light-desc" class="text-[10px] text-slate-400 leading-relaxed">
           จำลองทิศทางแสงจากดาวฤกษ์ ทำให้ด้านหน้าสว่างตามสีจริงของดาวและด้านหลังมืดลงเหมือนเงาจริง
         </p>
         <div class="grid grid-cols-2 gap-1.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
@@ -302,11 +321,11 @@
       <div id="system-sidebar" class="flex glass-panel w-72 sm:w-80 p-3.5 md:p-4 rounded-xl flex-col pointer-events-auto h-full max-h-full z-20 transition-all duration-200">
         <div class="flex justify-between items-center mb-2">
           <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-            <i class="fa-solid fa-sun text-amber-400"></i> เลือกระบบดาว
+            <i class="fa-solid fa-sun text-amber-400"></i> <span id="sidebar-title-text">เลือกระบบดาว</span>
           </h2>
           <div class="flex items-center gap-1.5">
             <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full border border-slate-700/60" id="system-count-badge">ระบบดาว</span>
-            <button onclick="toggleSystemSidebar(false)" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800/70 transition-all" title="ซ่อนแถบเลือกระบบดาว">
+            <button onclick="toggleSystemSidebar(false)" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800/70 transition-all">
               <i class="fa-solid fa-xmark"></i>
             </button>
           </div>
@@ -327,17 +346,16 @@
             type="button"
             id="btn-clear-search"
             onclick="clearSystemSearch()"
-            title="ล้างคำค้นหา"
             class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white w-4 h-4 flex items-center justify-center rounded-full hover:bg-slate-700/70 transition-all"
           >
             <i class="fa-solid fa-xmark text-[10px]"></i>
           </button>
         </div>
 
-        <!-- Quick Filter Chips: Featured + Prefix Filter (Kepler, HD, TOI, HIP, GJ, etc.) -->
+        <!-- Quick Filter Chips: Featured + Prefix Filter -->
         <div class="mb-2.5">
           <div class="flex items-center justify-between text-[10px] text-slate-400 mb-1 px-0.5">
-            <span><i class="fa-solid fa-filter text-blue-400 mr-1"></i>ตัวกรองด่วน / คำขึ้นต้น:</span>
+            <span><i class="fa-solid fa-filter text-blue-400 mr-1"></i><span id="filter-label-text">ตัวกรองด่วน / คำขึ้นต้น:</span></span>
             <span id="prefix-active-hint" class="text-amber-300 font-medium hidden">กำลังกรอง</span>
           </div>
           <div id="prefix-filter-chips" class="flex items-center gap-1 overflow-x-auto scrollable-strip pb-1">
@@ -350,7 +368,7 @@
         </div>
 
         <button onclick="openAddSystemModal()" class="mt-3 w-full py-2.5 px-3 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-2 glow-effect">
-          <i class="fa-solid fa-plus-circle"></i> ➕ เพิ่มระบบดาวใหม่
+          <i class="fa-solid fa-plus-circle"></i> <span id="btn-add-system-text">➕ เพิ่มระบบดาวใหม่</span>
         </button>
       </div>
 
@@ -362,7 +380,7 @@
             <h3 class="text-lg md:text-xl font-bold text-white truncate" id="info-name">Earth</h3>
           </div>
           <div class="flex items-center gap-1.5 flex-shrink-0">
-            <button id="btn-track-drawer" onclick="toggleTrackSelected()" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all flex items-center gap-1 bg-slate-800 hover:bg-emerald-600/30 border-slate-700 text-slate-300 hover:text-emerald-300" title="ติดตามดาวดวงนี้">
+            <button id="btn-track-drawer" onclick="toggleTrackSelected()" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all flex items-center gap-1 bg-slate-800 hover:bg-emerald-600/30 border-slate-700 text-slate-300 hover:text-emerald-300">
               <i class="fa-solid fa-crosshairs"></i>
               <span id="btn-track-drawer-text">ติดตาม</span>
             </button>
@@ -377,7 +395,7 @@
           <div id="info-featured-box" class="hidden p-2.5 rounded-lg border border-amber-500/40 bg-amber-950/35 text-amber-200 flex items-start gap-2.5">
             <i class="fa-solid fa-star text-amber-400 mt-0.5"></i>
             <div>
-              <div class="font-semibold text-[11px] text-amber-300">ระบบดาวเด่นระดับโลก</div>
+              <div class="font-semibold text-[11px] text-amber-300" id="info-featured-title">ระบบดาวเด่นระดับโลก</div>
               <div class="text-[11px] text-amber-100/90 leading-relaxed" id="info-featured-note">-</div>
             </div>
           </div>
@@ -388,19 +406,19 @@
 
           <div class="grid grid-cols-2 gap-2 text-slate-300">
             <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
-              <span class="text-slate-400 block text-[10px]">มวล (Mass)</span>
+              <span class="text-slate-400 block text-[10px]" id="info-mass-label">มวล (Mass)</span>
               <span class="font-semibold text-blue-300 text-sm" id="info-mass">-</span>
             </div>
             <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
-              <span class="text-slate-400 block text-[10px]">รัศมี (Radius)</span>
+              <span class="text-slate-400 block text-[10px]" id="info-radius-label">รัศมี (Radius)</span>
               <span class="font-semibold text-blue-300 text-sm" id="info-radius">-</span>
             </div>
             <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
-              <span class="text-slate-400 block text-[10px]">ระยะโคจร (Period)</span>
+              <span class="text-slate-400 block text-[10px]" id="info-period-label">ระยะโคจร (Period)</span>
               <span class="font-semibold text-amber-300 text-sm" id="info-period">-</span>
             </div>
             <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
-              <span class="text-slate-400 block text-[10px]">อุณหภูมิ (Temp)</span>
+              <span class="text-slate-400 block text-[10px]" id="info-temp-label">อุณหภูมิ (Temp)</span>
               <span class="font-semibold text-rose-300 text-sm" id="info-temp">-</span>
             </div>
           </div>
@@ -415,7 +433,7 @@
 
           <div class="p-3 bg-amber-950/20 rounded-lg border border-amber-900/30">
             <span class="text-amber-400 font-semibold block text-[11px] mb-1">
-              <i class="fa-solid fa-lightbulb mr-1"></i> เกร็ดน่ารู้ (Fun Fact)
+              <i class="fa-solid fa-lightbulb mr-1"></i> <span id="info-funfact-label">เกร็ดน่ารู้ (Fun Fact)</span>
             </span>
             <p class="text-slate-300 text-[11px] leading-relaxed" id="info-funfact">-</p>
           </div>
@@ -429,9 +447,9 @@
       
       <div id="tracking-status-banner" class="hidden glass-panel px-3.5 py-1 rounded-full border border-emerald-500/60 bg-emerald-950/75 text-emerald-300 text-xs flex items-center gap-2.5 pointer-events-auto track-glow">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-        <span>กำลังติดตาม: <strong id="tracking-target-name" class="text-white">-</strong></span>
+        <span><span id="tracking-prefix-text">กำลังติดตาม:</span> <strong id="tracking-target-name" class="text-white">-</strong></span>
         <button onclick="stopTracking()" class="ml-1 px-2 py-0.5 rounded-full bg-emerald-800/70 hover:bg-rose-600 text-[10px] text-white transition-all flex items-center gap-1">
-          <i class="fa-solid fa-xmark"></i> ยกเลิก
+          <i class="fa-solid fa-xmark"></i> <span id="tracking-cancel-text">ยกเลิก</span>
         </button>
       </div>
 
@@ -439,13 +457,13 @@
         <div id="planet-selector-list" class="flex items-center gap-1.5 overflow-x-auto scrollable-strip flex-1 min-w-0">
           <!-- Populated by JS -->
         </div>
-        <button type="button" onclick="togglePlanetStrip(false)" class="w-7 h-7 rounded-lg bg-slate-800/90 hover:bg-rose-600/80 text-slate-400 hover:text-white border border-slate-700/70 flex items-center justify-center transition-all flex-shrink-0 ml-1" title="ปิดแถบเลือกดาวเคราะห์">
+        <button type="button" onclick="togglePlanetStrip(false)" class="w-7 h-7 rounded-lg bg-slate-800/90 hover:bg-rose-600/80 text-slate-400 hover:text-white border border-slate-700/70 flex items-center justify-center transition-all flex-shrink-0 ml-1">
           <i class="fa-solid fa-xmark text-xs"></i>
         </button>
       </div>
 
       <div id="speed-controls-bar" class="glass-panel px-3.5 md:px-5 py-2 md:py-2.5 rounded-2xl flex flex-wrap sm:flex-nowrap items-center justify-center gap-2.5 md:gap-4 shadow-2xl pointer-events-auto max-w-[96vw]">
-        <button id="btn-play-pause" onclick="togglePlayPause()" class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center transition-all shadow-lg glow-effect flex-shrink-0" title="เล่น / หยุดชั่วคราว">
+        <button id="btn-play-pause" onclick="togglePlayPause()" class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center transition-all shadow-lg glow-effect flex-shrink-0">
           <i class="fa-solid fa-pause text-xs md:text-sm" id="icon-play-pause"></i>
         </button>
 
@@ -465,21 +483,21 @@
           <button type="button" data-speed="10" onclick="setPresetSpeed(10)" class="speed-preset-btn px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white transition-all">10x</button>
         </div>
 
-        <button type="button" onclick="toggleSpeedBar(false)" class="w-7 h-7 rounded-lg bg-slate-800/90 hover:bg-rose-600/80 text-slate-400 hover:text-white border border-slate-700/70 flex items-center justify-center transition-all flex-shrink-0" title="ปิดแท็บความเร็ว">
+        <button type="button" onclick="toggleSpeedBar(false)" class="w-7 h-7 rounded-lg bg-slate-800/90 hover:bg-rose-600/80 text-slate-400 hover:text-white border border-slate-700/70 flex items-center justify-center transition-all flex-shrink-0">
           <i class="fa-solid fa-xmark text-xs"></i>
         </button>
       </div>
 
       <div id="mini-reopen-row" class="flex items-center justify-center gap-2 pointer-events-none">
-        <button type="button" id="btn-open-planet-strip" onclick="togglePlanetStrip(true)" class="hidden glass-panel px-3.5 py-1.5 rounded-full border border-blue-500/40 hover:border-blue-400 text-slate-200 hover:text-white text-xs font-semibold flex items-center gap-2 pointer-events-auto shadow-lg transition-all" title="เปิดแถบเลือกดาวเคราะห์">
+        <button type="button" id="btn-open-planet-strip" onclick="togglePlanetStrip(true)" class="hidden glass-panel px-3.5 py-1.5 rounded-full border border-blue-500/40 hover:border-blue-400 text-slate-200 hover:text-white text-xs font-semibold flex items-center gap-2 pointer-events-auto shadow-lg transition-all">
           <i class="fa-solid fa-globe text-blue-400"></i>
-          <span>แถบเลือกดาว</span>
+          <span id="mini-planet-strip-label">แถบเลือกดาว</span>
           <i class="fa-solid fa-chevron-up text-[10px] text-slate-400"></i>
         </button>
 
-        <button type="button" id="btn-open-speed-bar" onclick="toggleSpeedBar(true)" class="hidden glass-panel px-3.5 py-1.5 rounded-full border border-blue-500/40 hover:border-blue-400 text-slate-200 hover:text-white text-xs font-semibold flex items-center gap-2 pointer-events-auto shadow-lg transition-all" title="เปิดแถบปรับความเร็ว">
+        <button type="button" id="btn-open-speed-bar" onclick="toggleSpeedBar(true)" class="hidden glass-panel px-3.5 py-1.5 rounded-full border border-blue-500/40 hover:border-blue-400 text-slate-200 hover:text-white text-xs font-semibold flex items-center gap-2 pointer-events-auto shadow-lg transition-all">
           <i class="fa-solid fa-gauge-high text-blue-400"></i>
-          <span>ความเร็ว: <strong id="mini-speed-label" class="text-blue-300 tabular-nums">1.0x</strong></span>
+          <span><span id="mini-speed-prefix">ความเร็ว:</span> <strong id="mini-speed-label" class="text-blue-300 tabular-nums">1.0x</strong></span>
           <i class="fa-solid fa-chevron-up text-[10px] text-slate-400"></i>
         </button>
       </div>
@@ -493,7 +511,7 @@
     <div class="glass-panel w-full max-w-lg p-5 md:p-6 rounded-2xl border border-blue-500/30 shadow-2xl relative text-xs">
       <div class="flex justify-between items-center pb-3 border-b border-slate-700/50 mb-4">
         <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-plus-circle text-emerald-400"></i> เพิ่มระบบดาวใหม่ (Create System)
+          <i class="fa-solid fa-plus-circle text-emerald-400"></i> <span id="modal-add-title">เพิ่มระบบดาวใหม่ (Create System)</span>
         </h3>
         <button onclick="closeAddSystemModal()" class="text-slate-400 hover:text-white p-1">
           <i class="fa-solid fa-xmark text-lg"></i>
@@ -503,26 +521,26 @@
       <form id="custom-system-form" onsubmit="handleCreateSystem(event)" class="space-y-4 max-h-[75vh] overflow-y-auto pr-1 scrollable-panel">
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-slate-400 mb-1">ชื่อระบบดาว (System Name)</label>
-            <input type="text" id="input-system-name" required placeholder="เช่น Kepler-186" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+            <label id="modal-sys-name-label" class="block text-slate-400 mb-1">ชื่อระบบดาว (System Name)</label>
+            <input type="text" id="input-system-name" required placeholder="e.g. Kepler-186" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
           </div>
           <div>
-            <label class="block text-slate-400 mb-1">ปีที่ค้นพบ (Year)</label>
-            <input type="text" id="input-system-year" placeholder="เช่น 2024" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+            <label id="modal-sys-year-label" class="block text-slate-400 mb-1">ปีที่ค้นพบ (Year)</label>
+            <input type="text" id="input-system-year" placeholder="e.g. 2024" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
           </div>
         </div>
 
         <div class="p-3 bg-slate-900/50 rounded-xl border border-slate-800 space-y-3">
           <h4 class="font-semibold text-amber-400 flex items-center gap-1.5 text-xs">
-            <i class="fa-solid fa-sun"></i> ข้อมูลดาวแม่ (Host Star)
+            <i class="fa-solid fa-sun"></i> <span id="modal-star-section-title">ข้อมูลดาวแม่ (Host Star)</span>
           </h4>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-slate-400 mb-1">ชื่อดาวแม่</label>
-              <input type="text" id="input-star-name" required placeholder="เช่น Kepler-186 Star" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white">
+              <label id="modal-star-name-label" class="block text-slate-400 mb-1">ชื่อดาวแม่</label>
+              <input type="text" id="input-star-name" required placeholder="e.g. Kepler-186 Star" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white">
             </div>
             <div>
-              <label class="block text-slate-400 mb-1">สีของดาวแม่</label>
+              <label id="modal-star-color-label" class="block text-slate-400 mb-1">สีของดาวแม่</label>
               <input type="color" id="input-star-color" value="#ffaa00" class="w-full h-8 bg-slate-950 border border-slate-800 rounded-lg cursor-pointer">
             </div>
           </div>
@@ -530,9 +548,9 @@
 
         <div class="flex justify-between items-center pt-2">
           <h4 class="font-semibold text-blue-400 flex items-center gap-1.5 text-xs">
-            <i class="fa-solid fa-globe"></i> รายการดาวเคราะห์ (Planets)
+            <i class="fa-solid fa-globe"></i> <span id="modal-planets-section-title">รายการดาวเคราะห์ (Planets)</span>
           </h4>
-          <button type="button" onclick="addPlanetRow()" class="px-2.5 py-1 bg-blue-600/30 hover:bg-blue-600/50 border border-blue-500/40 text-blue-300 text-[11px] rounded-lg transition-all">
+          <button type="button" id="modal-btn-add-planet" onclick="addPlanetRow()" class="px-2.5 py-1 bg-blue-600/30 hover:bg-blue-600/50 border border-blue-500/40 text-blue-300 text-[11px] rounded-lg transition-all">
             + เพิ่มดาวเคราะห์
           </button>
         </div>
@@ -540,8 +558,8 @@
         <div id="planet-rows-container" class="space-y-3"></div>
 
         <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
-          <button type="button" onclick="closeAddSystemModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-all">ยกเลิก</button>
-          <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg transition-all glow-effect">
+          <button type="button" id="modal-btn-cancel" onclick="closeAddSystemModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-all">ยกเลิก</button>
+          <button type="submit" id="modal-btn-submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg transition-all glow-effect">
             บันทึกและสร้างระบบดาว
           </button>
         </div>
@@ -554,36 +572,246 @@
 
   <!-- SCRIPT -->
   <script>
-    // --- Famous / Iconic Habitable Exoplanet Systems Catalog ---
+    // --- Localization / Language Dictionary (Thai & English Only) ---
+    let currentLang = localStorage.getItem("hz_explorer_lang") === "en" ? "en" : "th";
+
+    const I18N = {
+      th: {
+        appSubtitle: "แบบจำลองระบบดาวแบบโต้ตอบ 2D / 3D",
+        featuredBadge: "ระบบเด่น",
+        systemsBtn: "ระบบดาว",
+        settingsBtn: "ตั้งค่า",
+        settingsTitle: "ตั้งค่าการแสดงผล",
+        langLabel: "ภาษา (Language)",
+        bgLabel: "พื้นหลังอวกาศ",
+        bgStars: "ดวงดาวประปราย",
+        bgBlack: "สีดำปกติ",
+        lightLabel: "แสงเงาสมจริงจากดาวฤกษ์",
+        lightDesc: "จำลองทิศทางแสงจากดาวฤกษ์ ทำให้ด้านหน้าสว่างตามสีจริงของดาวและด้านหลังมืดลงเหมือนเงาจริง",
+        lightNormal: "ปกติ",
+        lightRealistic: "สมจริง (ด้านหลังมืด)",
+        sidebarTitle: "เลือกระบบดาว",
+        searchPlaceholder: "ค้นหาชื่อระบบ หรือเลือกหมวดด้านล่าง...",
+        filterLabel: "ตัวกรองด่วน / คำขึ้นต้น:",
+        filteringFeatured: "เฉพาะระบบเด่น",
+        filteringPrefix: "ขึ้นต้น:",
+        featuredChip: "ระบบเด่น",
+        allChip: "ทั้งหมด",
+        systemUnit: "ระบบ",
+        planetUnit: "ดาวเคราะห์",
+        planetShortUnit: "ดาว",
+        featuredTagShort: "เด่น",
+        ourSolarTag: "สุริยะของเรา",
+        addSystemBtn: "➕ เพิ่มระบบดาวใหม่",
+        emptySearch: "ไม่พบระบบดาวที่ตรงกับเงื่อนไขการค้นหา",
+        clearFilterBtn: "ล้างตัวกรองทั้งหมด",
+        typeStar: "ดาวฤกษ์ (Host Star)",
+        typePlanet: "ดาวเคราะห์ (Planet)",
+        trackBtn: "ติดตาม",
+        trackingBtn: "กำลังติดตาม",
+        featuredInfoTitle: "ระบบดาวเด่นระดับโลก",
+        massLabel: "มวล (Mass)",
+        radiusLabel: "รัศมี (Radius)",
+        periodLabel: "ระยะโคจร (Period)",
+        tempLabel: "อุณหภูมิ (Temp)",
+        earthDays: "วันโลก",
+        habitableTitle: "อยู่ในโซนเอื้อต่อสิ่งมีชีวิต (Habitable Zone)",
+        habitableDesc: "มีอุณหภูมิเหมาะสมที่เอื้อให้อาจมีน้ำในสถานะของเหลวได้",
+        nonHabitableTitle: "อยู่นอกโซนเอื้อต่อสิ่งมีชีวิต",
+        nonHabitableDesc: "อุณหภูมิร้อนหรือหนาวจัดเกินไปสำหรับสิ่งมีชีวิตแบบโลก",
+        funFactLabel: "เกร็ดน่ารู้ (Fun Fact)",
+        noMoreInfo: "ไม่มีข้อมูลเพิ่มเติม",
+        trackingBannerPrefix: "กำลังติดตาม:",
+        cancelBtn: "ยกเลิก",
+        miniPlanetStrip: "แถบเลือกดาว",
+        miniSpeedPrefix: "ความเร็ว:",
+        modalAddTitle: "เพิ่มระบบดาวใหม่ (Create System)",
+        modalSysName: "ชื่อระบบดาว (System Name)",
+        modalSysYear: "ปีที่ค้นพบ (Year)",
+        modalStarTitle: "ข้อมูลดาวแม่ (Host Star)",
+        modalStarName: "ชื่อดาวแม่",
+        modalStarColor: "สีของดาวแม่",
+        modalPlanetsTitle: "รายการดาวเคราะห์ (Planets)",
+        modalAddPlanetBtn: "+ เพิ่มดาวเคราะห์",
+        modalSubmitBtn: "บันทึกและสร้างระบบดาว",
+        modalPlanetIdx: "ดาวเคราะห์ดวงที่",
+        modalPlanetName: "ชื่อดาวเคราะห์",
+        modalPlanetDist: "ระยะห่าง (Dist)",
+        modalPlanetSize: "ขนาด (Size)",
+        modalPlanetColor: "สีดาว",
+        modalPlanetSpeed: "ความเร็วโคจร",
+        deleteConfirm: "ต้องการลบระบบดาวนี้ใช่หรือไม่?",
+        solarSystemName: "ระบบสุริยะ (Solar System)",
+        sunName: "ดวงอาทิตย์ (Sun)"
+      },
+      en: {
+        appSubtitle: "Interactive 2D / 3D Stellar Systems Simulation",
+        featuredBadge: "Featured",
+        systemsBtn: "Systems",
+        settingsBtn: "Settings",
+        settingsTitle: "Display Settings",
+        langLabel: "Language",
+        bgLabel: "Space Background",
+        bgStars: "Starfield",
+        bgBlack: "Pure Black",
+        lightLabel: "Realistic Star Lighting",
+        lightDesc: "Simulates directional starlight with illuminated day-sides and realistic night-side shadows.",
+        lightNormal: "Standard",
+        lightRealistic: "Realistic (Night Shadow)",
+        sidebarTitle: "Select Stellar System",
+        searchPlaceholder: "Search system name or filter below...",
+        filterLabel: "Quick Filter / Prefix:",
+        filteringFeatured: "Featured Only",
+        filteringPrefix: "Prefix:",
+        featuredChip: "Featured",
+        allChip: "All",
+        systemUnit: "systems",
+        planetUnit: "planets",
+        planetShortUnit: "planets",
+        featuredTagShort: "Top",
+        ourSolarTag: "Our Solar System",
+        addSystemBtn: "+ Add Custom System",
+        emptySearch: "No stellar systems match your search.",
+        clearFilterBtn: "Reset All Filters",
+        typeStar: "Host Star",
+        typePlanet: "Exoplanet / Planet",
+        trackBtn: "Track",
+        trackingBtn: "Tracking",
+        featuredInfoTitle: "Iconic Habitable System",
+        massLabel: "Mass",
+        radiusLabel: "Radius",
+        periodLabel: "Orbital Period",
+        tempLabel: "Equilibrium Temp",
+        earthDays: "Earth days",
+        habitableTitle: "Inside Habitable Zone (HZ)",
+        habitableDesc: "Orbital distance supports temperatures where liquid water could exist.",
+        nonHabitableTitle: "Outside Habitable Zone",
+        nonHabitableDesc: "Surface conditions are likely too hot or too cold for liquid water.",
+        funFactLabel: "Fun Fact",
+        noMoreInfo: "No additional details available.",
+        trackingBannerPrefix: "Tracking:",
+        cancelBtn: "Stop",
+        miniPlanetStrip: "Planets Bar",
+        miniSpeedPrefix: "Speed:",
+        modalAddTitle: "Create Custom Stellar System",
+        modalSysName: "System Name",
+        modalSysYear: "Discovery Year",
+        modalStarTitle: "Host Star Properties",
+        modalStarName: "Star Name",
+        modalStarColor: "Star Color",
+        modalPlanetsTitle: "Planets List",
+        modalAddPlanetBtn: "+ Add Planet",
+        modalSubmitBtn: "Save & Create System",
+        modalPlanetIdx: "Planet #",
+        modalPlanetName: "Planet Name",
+        modalPlanetDist: "Distance",
+        modalPlanetSize: "Size",
+        modalPlanetColor: "Color",
+        modalPlanetSpeed: "Orbit Speed",
+        deleteConfirm: "Are you sure you want to delete this custom system?",
+        solarSystemName: "Solar System",
+        sunName: "Sun"
+      }
+    };
+
+    function t(key) {
+      return (I18N[currentLang] && I18N[currentLang][key]) || I18N.th[key] || key;
+    }
+
+    function getDisplaySystemName(sys) {
+      if (!sys) return "";
+      if (sys.id === "sol") return t("solarSystemName");
+      return sys.name;
+    }
+
+    function getDisplayStarName(sys) {
+      if (!sys || !sys.star) return "";
+      if (sys.id === "sol") return t("sunName");
+      return sys.star.name;
+    }
+
+    function getDisplayPlanetName(p) {
+      if (!p) return "";
+      if (currentLang === "en" && p.nameEn) return p.nameEn;
+      return p.name;
+    }
+
+    function getDisplayDesc(item, sys) {
+      if (!item) return "-";
+      if (currentLang === "en") {
+        if (item.descEn) return item.descEn;
+        if (item.realDistAU !== undefined && sys) {
+          return `Confirmed exoplanet in the ${sys.name} system orbiting at ${Number(item.realDistAU).toFixed(3)} AU (NASA Exoplanet Archive).`;
+        }
+        if (sys && sys.hzMinAU !== undefined && sys.hzMaxAU !== undefined) {
+          return `Host star of ${sys.name} • Habitable Zone: ${sys.hzMinAU} – ${sys.hzMaxAU} AU.`;
+        }
+      }
+      return item.desc || "-";
+    }
+
+    function getDisplayFunFact(item, sys) {
+      if (!item) return t("noMoreInfo");
+      if (currentLang === "en") {
+        if (item.funFactEn) return item.funFactEn;
+        if (item.periodDays !== undefined && sys) {
+          return `Completes one full orbit around ${sys.name} every ${Number(item.periodDays).toFixed(1)} Earth days.`;
+        }
+      }
+      return item.funFact || t("noMoreInfo");
+    }
+
+    // --- 5 Featured Habitable Exoplanet Systems ---
     const FAMOUS_SYSTEMS_META = [
-      { key: "sol", match: /^ระบบสุริยะ|^solar system$/i, rank: 1, tag: "บ้านของเรา (โลก)", note: "ระบบสุริยะของเราเอง มีโลกโคจรอยู่ใน Habitable Zone อย่างสมบูรณ์" },
-      { key: "trappist-1", match: /^trappist-?1$/i, rank: 2, tag: "7 ดาวหิน • 3 ดวงใน HZ", note: "ระบบดาวแคระแดงสุดโด่งดัง มีดาวเคราะห์หินขนาดเท่าโลกถึง 7 ดวง และอยู่ใน HZ ถึง 3 ดวง (e, f, g)" },
-      { key: "proxima centauri", match: /^proxima cen/i, rank: 3, tag: "ใกล้โลกที่สุด (4.24 ปีแสง)", note: "ระบบดาวฤกษ์ที่อยู่ใกล้ดวงอาทิตย์ที่สุด มี Proxima Cen b โคจรอยู่ในโซนเอื้อต่อสิ่งมีชีวิต" },
-      { key: "kepler-186", match: /^kepler-?186$/i, rank: 4, tag: "ดาวเท่าโลกใน HZ ดวงแรก", note: "Kepler-186f เป็นดาวเคราะห์ขนาดใกล้เคียงโลกดวงแรกที่ค้นพบใน Habitable Zone ของดาวฤกษ์อื่น" },
-      { key: "kepler-452", match: /^kepler-?452$/i, rank: 5, tag: "ญาติผู้พี่ของโลก (Earth 2.0)", note: "Kepler-452b โคจรรอบดาวฤกษ์ชนิด G คล้ายดวงอาทิตย์มากที่สุดด้วยคาบโคจร 385 วัน" },
-      { key: "kepler-442", match: /^kepler-?442$/i, rank: 6, tag: "ดัชนีคล้ายโลกสูงมาก", note: "Kepler-442b เป็นดาวเคราะห์หินซูเปอร์เอิร์ธที่นักดาราศาสตร์จัดให้เอื้อต่อสิ่งมีชีวิตสูงมาก" },
-      { key: "kepler-62", match: /^kepler-?62$/i, rank: 7, tag: "ดาวมหาสมุทร 62e & 62f", note: "มีดาวเคราะห์ใน HZ ถึง 2 ดวง (Kepler-62e และ 62f) ที่คาดว่าปกคลุมด้วยมหาสมุทรทั่วทั้งดวง" },
-      { key: "kepler-22", match: /^kepler-?22$/i, rank: 8, tag: "ดาวใน HZ ดวงแรกของ Kepler", note: "Kepler-22b เป็นดาวเคราะห์ใน Habitable Zone ดวงแรกที่กล้องโทรทรรศน์อวกาศ Kepler ยืนยันได้" },
-      { key: "kepler-1649", match: /^kepler-?1649$/i, rank: 9, tag: "แฝดขนาด/แสงคล้ายโลก", note: "Kepler-1649c มีขนาด 1.06 เท่าของโลก และได้รับแสงจากดาวแม่ 75% ของโลก" },
-      { key: "kepler-296", match: /^kepler-?296$/i, rank: 10, tag: "ระบบดาวคู่ + 2 ดาวใน HZ", note: "มีดาวเคราะห์ Kepler-296e และ 296f โคจรอยู่ในโซนเอื้อต่อสิ่งมีชีวิต" },
-      { key: "kepler-438", match: /^kepler-?438$/i, rank: 11, tag: "ESI ใกล้เคียงโลกมาก", note: "Kepler-438b มีขนาดใกล้เคียงโลกมากและโคจรอยู่ในขอบในของโซนเอื้อต่อสิ่งมีชีวิต" },
-      { key: "kepler-1229", match: /^kepler-?1229$/i, rank: 12, tag: "ซูเปอร์เอิร์ธใน HZ", note: "Kepler-1229b โคจรรอบดาวแคระแดงในโซนที่น้ำสามารถคงสถานะของเหลวได้" },
-      { key: "kepler-1544", match: /^kepler-?1544$/i, rank: 13, tag: "ซูเปอร์เอิร์ธอบอุ่น", note: "Kepler-1544b เป็นซูเปอร์เอิร์ธในโซนเอื้อต่อสิ่งมีชีวิตที่มีอุณหภูมิใกล้เคียงโลก" },
-      { key: "toi-700", match: /^toi-?700$/i, rank: 14, tag: "ดาวเท่าโลกจากกล้อง TESS", note: "ระบบแรกจากกล้อง TESS ที่พบดาวเคราะห์ขนาดเท่าโลกใน HZ (TOI-700 d และ TOI-700 e)" },
-      { key: "k2-18", match: /^k2-?18$/i, rank: 15, tag: "พบไอน้ำ/มีเทนโดย JWST", note: "กล้อง James Webb ตรวจพบไอน้ำ มีเทน และคาร์บอนไดออกไซด์ในชั้นบรรยากาศของ K2-18b" },
-      { key: "lhs 1140", match: /^lhs\s?1140$/i, rank: 16, tag: "ดาวมหาสมุทรน้ำแข็ง", note: "LHS 1140b เป็นหนึ่งในเป้าหมายหลักของกล้อง JWST คาดว่ามีมหาสมุทรขนาดใหญ่บนดาว" },
-      { key: "gj 667 c", match: /^gj\s?667\s?c$/i, rank: 17, tag: "ระบบดาวฤกษ์ 3 ดวง", note: "โคจรในระบบดาวฤกษ์ 3 ดวง (Triple Star System) โดยมี GJ 667 Cc อยู่ในโซนเอื้อต่อสิ่งมีชีวิต" },
-      { key: "teegarden's star", match: /^teegarden/i, rank: 18, tag: "ห่างโลกเพียง 12.5 ปีแสง", note: "ดาวแคระแดงใกล้โลกมาก มี Teegarden's Star b และ c อยู่ใน Habitable Zone" },
-      { key: "wolf 1061", match: /^wolf\s?1061$/i, rank: 19, tag: "ห่างโลก 14 ปีแสง", note: "ระบบดาวใกล้โลกที่มี Wolf 1061c โคจรอยู่ในโซนเอื้อต่อสิ่งมีชีวิต" },
-      { key: "ross 128", match: /^ross\s?128$/i, rank: 20, tag: "ดาวสงบใกล้โลก 11 ปีแสง", note: "Ross 128b โคจรรอบดาวแคระแดงที่สงบไม่ค่อยปล่อยรังสีรุนแรง ห่างโลกเพียง 11 ปีแสง" },
-      { key: "gliese 581", match: /^(gj|gliese)\s?581$/i, rank: 21, tag: "ระบบดาวระดับตำนาน", note: "หนึ่งในระบบดาวนอกระบบสุริยะที่โด่งดังที่สุดในการค้นหาดาวเคราะห์เอื้อต่อสิ่งมีชีวิต" },
-      { key: "gj 1061", match: /^gj\s?1061$/i, rank: 22, tag: "ห่างโลก 12 ปีแสง", note: "มีดาวเคราะห์ขนาดใกล้เคียงโลก GJ 1061 c และ d โคจรอยู่ใน Habitable Zone" },
-      { key: "hd 40307", match: /^hd\s?40307$/i, rank: 23, tag: "ซูเปอร์เอิร์ธ HD 40307g", note: "ระบบดาวที่มีดาวเคราะห์หลายดวง โดยมี HD 40307g โคจรอยู่ในโซนเอื้อต่อสิ่งมีชีวิต" },
-      { key: "tau ceti", match: /^tau\s?cet/i, rank: 24, tag: "ดาวคล้ายดวงอาทิตย์ใกล้โลก", note: "ดาวฤกษ์คล้ายดวงอาทิตย์ที่อยู่ห่างจากโลกเพียง 11.9 ปีแสง" }
+      {
+        key: "trappist-1",
+        match: /^trappist-?1$/i,
+        rank: 1,
+        tagTh: "7 ดาวหิน • 3 ดวงใน HZ",
+        tagEn: "7 Rocky Worlds • 3 in HZ",
+        noteTh: "ระบบดาวแคระแดงสุดโด่งดัง มีดาวเคราะห์หินขนาดเท่าโลกถึง 7 ดวง และอยู่ใน HZ ถึง 3 ดวง (e, f, g)",
+        noteEn: "Iconic ultra-cool red dwarf system hosting 7 Earth-sized rocky planets, with 3 (e, f, g) inside the Habitable Zone."
+      },
+      {
+        key: "proxima centauri",
+        match: /^proxima cen/i,
+        rank: 2,
+        tagTh: "ใกล้โลกที่สุด (4.24 ปีแสง)",
+        tagEn: "Closest to Earth (4.24 ly)",
+        noteTh: "ระบบดาวฤกษ์ที่อยู่ใกล้ดวงอาทิตย์ที่สุด มี Proxima Cen b โคจรอยู่ในโซนเอื้อต่อสิ่งมีชีวิต",
+        noteEn: "The closest known star system to our Sun, hosting Proxima Centauri b inside its Habitable Zone."
+      },
+      {
+        key: "kepler-452",
+        match: /^kepler-?452$/i,
+        rank: 3,
+        tagTh: "ญาติผู้พี่ของโลก (Earth 2.0)",
+        tagEn: "Earth's Older Cousin (Earth 2.0)",
+        noteTh: "Kepler-452b โคจรรอบดาวฤกษ์ชนิด G คล้ายดวงอาทิตย์มากที่สุดด้วยคาบโคจร 385 วัน",
+        noteEn: "Kepler-452b orbits a Sun-like G-type star in 385 days, earning the nickname Earth 2.0."
+      },
+      {
+        key: "kepler-186",
+        match: /^kepler-?186$/i,
+        rank: 4,
+        tagTh: "ดาวเท่าโลกใน HZ ดวงแรก",
+        tagEn: "First Earth-Size in HZ",
+        noteTh: "Kepler-186f เป็นดาวเคราะห์ขนาดใกล้เคียงโลกดวงแรกที่ค้นพบใน Habitable Zone ของดาวฤกษ์อื่น",
+        noteEn: "Kepler-186f was the first validated Earth-sized planet discovered within the Habitable Zone of another star."
+      },
+      {
+        key: "k2-18",
+        match: /^k2-?18$/i,
+        rank: 5,
+        tagTh: "พบไอน้ำ/มีเทนโดย JWST",
+        tagEn: "JWST Water & Methane",
+        noteTh: "กล้อง James Webb ตรวจพบไอน้ำ มีเทน และคาร์บอนไดออกไซด์ในชั้นบรรยากาศของ K2-18b",
+        noteEn: "NASA's James Webb Space Telescope detected carbon-bearing molecules including methane and CO2 in K2-18b's atmosphere."
+      }
     ];
 
     function getFeaturedMeta(sys) {
-      if (!sys || !sys.name) return null;
+      if (!sys || !sys.name || sys.id === "sol") return null;
       const cleanName = sys.name.trim();
       for (const item of FAMOUS_SYSTEMS_META) {
         if (item.key === sys.id || item.match.test(cleanName)) {
@@ -591,6 +819,106 @@
         }
       }
       return null;
+    }
+
+    function getFeaturedTag(feat) {
+      if (!feat) return "";
+      return currentLang === "en" ? feat.tagEn : feat.tagTh;
+    }
+
+    function getFeaturedNote(feat) {
+      if (!feat) return "";
+      return currentLang === "en" ? feat.noteEn : feat.noteTh;
+    }
+
+    // --- Apply Language Across Entire UI ---
+    function setLanguage(lang) {
+      currentLang = lang === "en" ? "en" : "th";
+      localStorage.setItem("hz_explorer_lang", currentLang);
+      document.documentElement.lang = currentLang;
+
+      const btnTh = document.getElementById("btn-lang-th");
+      const btnEn = document.getElementById("btn-lang-en");
+      if (btnTh && btnEn) {
+        btnTh.className = currentLang === "th"
+          ? "py-1.5 px-2 rounded-lg font-semibold text-[11px] bg-blue-600 text-white shadow transition-all flex items-center justify-center gap-1.5"
+          : "py-1.5 px-2 rounded-lg font-semibold text-[11px] text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1.5";
+        btnEn.className = currentLang === "en"
+          ? "py-1.5 px-2 rounded-lg font-semibold text-[11px] bg-blue-600 text-white shadow transition-all flex items-center justify-center gap-1.5"
+          : "py-1.5 px-2 rounded-lg font-semibold text-[11px] text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1.5";
+      }
+
+      const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      setTxt("header-featured-badge-text", t("featuredBadge"));
+      setTxt("settings-btn-label", t("settingsBtn"));
+      setTxt("settings-modal-title", t("settingsTitle"));
+      setTxt("settings-lang-label", t("langLabel"));
+      setTxt("settings-bg-label", t("bgLabel"));
+      setTxt("settings-bg-stars-text", t("bgStars"));
+      setTxt("settings-bg-black-text", t("bgBlack"));
+      setTxt("settings-light-label", t("lightLabel"));
+      setTxt("settings-light-desc", t("lightDesc"));
+      setTxt("btn-light-normal", t("lightNormal"));
+      setTxt("btn-light-realistic", t("lightRealistic"));
+      setTxt("sidebar-title-text", t("sidebarTitle"));
+      setTxt("filter-label-text", t("filterLabel"));
+      setTxt("btn-add-system-text", t("addSystemBtn"));
+      setTxt("info-featured-title", t("featuredInfoTitle"));
+      setTxt("info-mass-label", t("massLabel"));
+      setTxt("info-radius-label", t("radiusLabel"));
+      setTxt("info-period-label", t("periodLabel"));
+      setTxt("info-temp-label", t("tempLabel"));
+      setTxt("info-funfact-label", t("funFactLabel"));
+      setTxt("tracking-prefix-text", t("trackingBannerPrefix"));
+      setTxt("tracking-cancel-text", t("cancelBtn"));
+      setTxt("mini-planet-strip-label", t("miniPlanetStrip"));
+      setTxt("mini-speed-prefix", t("miniSpeedPrefix"));
+      setTxt("modal-add-title", t("modalAddTitle"));
+      setTxt("modal-sys-name-label", t("modalSysName"));
+      setTxt("modal-sys-year-label", t("modalSysYear"));
+      setTxt("modal-star-section-title", t("modalStarTitle"));
+      setTxt("modal-star-name-label", t("modalStarName"));
+      setTxt("modal-star-color-label", t("modalStarColor"));
+      setTxt("modal-planets-section-title", t("modalPlanetsTitle"));
+      setTxt("modal-btn-add-planet", t("modalAddPlanetBtn"));
+      setTxt("modal-btn-cancel", t("cancelBtn"));
+      setTxt("modal-btn-submit", t("modalSubmitBtn"));
+
+      const searchInput = document.getElementById("system-search-input");
+      if (searchInput) searchInput.placeholder = t("searchPlaceholder");
+
+      // Update current system subtitle
+      const sys = systemsData[currentSystemId];
+      if (sys) {
+        const feat = sys._featured;
+        const subtitleEl = document.getElementById("current-system-subtitle");
+        if (subtitleEl) {
+          subtitleEl.innerText = currentSystemId === "sol"
+            ? `${t("ourSolarTag")} • 8 ${t("planetUnit")}`
+            : feat
+              ? `${getDisplaySystemName(sys)} • ${getFeaturedTag(feat)} (${sys.discoveryYear})`
+              : `${getDisplaySystemName(sys)} • ${sys.type} (${sys.discoveryYear})`;
+        }
+      }
+
+      renderPrefixFilterChips();
+      renderSystemList();
+      updateTrackingUI();
+
+      // Refresh Info Drawer if open
+      if (selectedObject && sys) {
+        const isStar = selectedObject === sys.star;
+        showInfoDrawer(selectedObject, isStar ? "star" : "planet");
+      }
+
+      // Refresh 3D labels
+      if (starLabel3D && sys) {
+        const sName = getDisplayStarName(sys);
+        starLabel3D.textContent = sys._featured ? `★ ${sName}` : sName;
+      }
+      planetLabels3D.forEach(item => {
+        item.el.textContent = getDisplayPlanetName(item.data);
+      });
     }
 
     // --- Preloader Controller ---
@@ -608,10 +936,16 @@
       const totalDurationMs = 3500;
       const startTime = performance.now();
 
-      const stages = [
+      const stages = currentLang === "en" ? [
+        { maxPct: 20, label: "assets & textures", detail: "Loading planetary textures and shaders..." },
+        { maxPct: 45, label: "NASA exoplanet archive", detail: `Filtering Habitable Zone systems (${totalSystemCount} systems)...` },
+        { maxPct: 70, label: "Iconic Systems Bookmark", detail: `Bookmarking ${featuredCount} iconic systems...` },
+        { maxPct: 90, label: "Habitable Zone (HZ)", detail: "Calculating 2D/3D Habitable Zone boundaries..." },
+        { maxPct: 100, label: "Ready", detail: `Launching HZ Explorer (${totalSystemCount} systems)...` }
+      ] : [
         { maxPct: 20, label: "assets & textures", detail: "กำลังโหลดทรัพยากรกราฟิกและพื้นผิวดาว..." },
         { maxPct: 45, label: "NASA exoplanet archive", detail: `กำลังคัดกรองระบบดาวที่มีดาวเคราะห์ใน HZ (${totalSystemCount} ระบบ)...` },
-        { maxPct: 70, label: "Iconic Systems Bookmark", detail: `กำลังปักหมุดระบบดาวเด่นระดับโลก (${featuredCount} ระบบ)...` },
+        { maxPct: 70, label: "Iconic Systems Bookmark", detail: `กำลังปักหมุดระบบดาวเด่น (${featuredCount} ระบบ)...` },
         { maxPct: 90, label: "Habitable Zone (HZ)", detail: "กำลังคำนวณขอบเขตโซนเอื้อต่อสิ่งมีชีวิต 2D/3D..." },
         { maxPct: 100, label: "ระบบทั้งหมดเสร็จสมบูรณ์", detail: `พร้อมเข้าสู่ HZ Explorer (${totalSystemCount} ระบบดาว)...` }
       ];
@@ -658,7 +992,7 @@
       "sol": {
         id: "sol",
         name: "ระบบสุริยะ (Solar System)",
-        type: "Single Star System",
+        type: "สุริยะของเรา",
         discoveryYear: "โบราณกาล",
         hzMin: 121.5,
         hzMax: 164.7,
@@ -674,17 +1008,20 @@
           temp: "5,778 K",
           mass: "1.0 M☉",
           displayRadius: "1.00 R☉",
-          desc: "ดาวฤกษ์ศูนย์กลางของระบบสุริยะของเรา เป็นดาวแคระเหลืองที่มีอายุประมาณ 4,600 ล้านปี"
+          desc: "ดาวฤกษ์ศูนย์กลางของระบบสุริยะของเรา เป็นดาวแคระเหลืองที่มีอายุประมาณ 4,600 ล้านปี",
+          descEn: "The central star of our Solar System, a G2V yellow dwarf approximately 4.6 billion years old.",
+          funFact: "มวลของดวงอาทิตย์คิดเป็น 99.86% ของมวลทั้งหมดในระบบสุริยะ",
+          funFactEn: "The Sun accounts for 99.86% of the total mass of the entire Solar System."
         },
         planets: [
-          { id: "mercury", name: "ดาวพุธ", dist: 55, speed: 0.04, size: 4, realRadiusEarth: 0.38, color: "#a6a6a6", hasRing: false, realDistAU: 0.39, periodDays: 88, mass: "0.055 M⊕", radius: "0.38 R⊕", temp: "440 K", habitable: false, desc: "ดาวเคราะห์ที่อยู่ใกล้ดวงอาทิตย์ที่สุด ไม่มีชั้นบรรยากาศหนาแน่น", funFact: "1 ปีบนดาวพุธยาวเพียง 88 วันของโลก" },
-          { id: "venus", name: "ดาวศุกร์", dist: 85, speed: 0.025, size: 7, realRadiusEarth: 0.95, color: "#e3bb76", hasRing: false, realDistAU: 0.72, periodDays: 225, mass: "0.815 M⊕", radius: "0.95 R⊕", temp: "737 K", habitable: false, desc: "ดาวเคราะห์ที่ร้อนที่สุดในระบบสุริยะเนื่องจากสภาวะเรือนกระจกแบบกู้อย่างไม่ได้", funFact: "หมุนรอบตัวเองกลับทิศทางกับดาวเคราะห์ส่วนใหญ่" },
-          { id: "earth", name: "โลก (Earth)", dist: 135, speed: 0.018, size: 8, realRadiusEarth: 1.00, color: "#4b9cd3", hasRing: false, realDistAU: 1.0, periodDays: 365.25, mass: "1.0 M⊕", radius: "1.0 R⊕", temp: "288 K", habitable: true, desc: "บ้านของเรา ดาวเคราะห์ดวงเดียวที่ยืนยันว่ามีสิ่งมีชีวิตและน้ำสถานะของเหลว", funFact: "เป็นดาวเคราะห์หินดวงเดียวที่มีสนามแม่เหล็กรุนแรงปกป้องรังสีสุริยะ" },
-          { id: "mars", name: "ดาวอังคาร", dist: 175, speed: 0.014, size: 6, realRadiusEarth: 0.53, color: "#cc5533", hasRing: false, realDistAU: 1.52, periodDays: 687, mass: "0.107 M⊕", radius: "0.53 R⊕", temp: "210 K", habitable: false, desc: "ดาวเคราะห์แดงที่มีภูเขาไฟสูงสุดในระบบสุริยะ (Olympus Mons)", funFact: "มีหิมะที่เป็นน้ำแข็งแห้ง (คาร์บอนไดออกไซด์) ตกที่ขั้วดาว" },
-          { id: "jupiter", name: "ดาวพฤหัสบดี", dist: 225, speed: 0.009, size: 15, realRadiusEarth: 11.2, color: "#d9a066", hasRing: true, realDistAU: 5.20, periodDays: 4333, mass: "317.8 M⊕", radius: "11.2 R⊕", temp: "120 K", habitable: false, desc: "ดาวเคราะห์แก๊สยักษ์ขนาดใหญ่ที่สุด มีจุดแดงใหญ่ที่เป็นพายุขนาดมหึมา", funFact: "มวลของดาวพฤหัสฯ มากกว่าดาวเคราะห์ดวงอื่นในระบบสุริยะรวมกันถึง 2.5 เท่า" },
-          { id: "saturn", name: "ดาวเสาร์", dist: 275, speed: 0.006, size: 12, realRadiusEarth: 9.45, color: "#e6c280", hasRing: true, realDistAU: 9.58, periodDays: 10759, mass: "95.2 M⊕", radius: "9.45 R⊕", temp: "88 K", habitable: false, desc: "โดดเด่นด้วยระบบวงแหวนน้ำแข็งที่กว้างใหญ่และสวยงาม", funFact: "ความหนาแน่นต่ำมากจนสามารถลอยน้ำได้หากมีอ่างน้ำใหญ่พอ" },
-          { id: "uranus", name: "ดาวยูเรนัส", dist: 320, speed: 0.004, size: 9.5, realRadiusEarth: 4.00, color: "#73c2fb", hasRing: true, realDistAU: 19.2, periodDays: 30687, mass: "14.5 M⊕", radius: "4.0 R⊕", temp: "59 K", habitable: false, desc: "ดาวเคราะห์แก๊สเย็นจัดที่มีแกนหมุนตะแคงข้างเกือบ 98 องศา", funFact: "หมุนตะแคงข้างเหมือนลูกบอลกำลังกลิ้งไปตามวงโคจร" },
-          { id: "neptune", name: "ดาวเนปจูน", dist: 360, speed: 0.003, size: 9.5, realRadiusEarth: 3.88, color: "#2b547e", hasRing: true, realDistAU: 30.0, periodDays: 60190, mass: "17.1 M⊕", radius: "3.88 R⊕", temp: "48 K", habitable: false, desc: "ดาวเคราะห์สีน้ำเงินเข้มขอบนอกสุด มีความเร็วลมพายุสูงที่สุดในระบบสุริยะ", funFact: "มีความเร็วลมสูงถึง 2,100 กม./ชม." }
+          { id: "mercury", name: "ดาวพุธ", nameEn: "Mercury", dist: 55, speed: 0.04, size: 4, realRadiusEarth: 0.38, color: "#a6a6a6", hasRing: false, realDistAU: 0.39, periodDays: 88, mass: "0.055 M⊕", radius: "0.38 R⊕", temp: "440 K", habitable: false, desc: "ดาวเคราะห์ที่อยู่ใกล้ดวงอาทิตย์ที่สุด ไม่มีชั้นบรรยากาศหนาแน่น", descEn: "The closest planet to the Sun with virtually no atmosphere to retain heat.", funFact: "1 ปีบนดาวพุธยาวเพียง 88 วันของโลก", funFactEn: "One year on Mercury lasts just 88 Earth days." },
+          { id: "venus", name: "ดาวศุกร์", nameEn: "Venus", dist: 85, speed: 0.025, size: 7, realRadiusEarth: 0.95, color: "#e3bb76", hasRing: false, realDistAU: 0.72, periodDays: 225, mass: "0.815 M⊕", radius: "0.95 R⊕", temp: "737 K", habitable: false, desc: "ดาวเคราะห์ที่ร้อนที่สุดในระบบสุริยะเนื่องจากสภาวะเรือนกระจกแบบกู้อย่างไม่ได้", descEn: "The hottest planet in our Solar System due to a runaway greenhouse atmosphere.", funFact: "หมุนรอบตัวเองกลับทิศทางกับดาวเคราะห์ส่วนใหญ่", funFactEn: "Venus rotates backwards compared to most other planets in the Solar System." },
+          { id: "earth", name: "โลก (Earth)", nameEn: "Earth", dist: 135, speed: 0.018, size: 8, realRadiusEarth: 1.00, color: "#4b9cd3", hasRing: false, realDistAU: 1.0, periodDays: 365.25, mass: "1.0 M⊕", radius: "1.0 R⊕", temp: "288 K", habitable: true, desc: "บ้านของเรา ดาวเคราะห์ดวงเดียวที่ยืนยันว่ามีสิ่งมีชีวิตและน้ำสถานะของเหลว", descEn: "Our home world and the only astronomical object confirmed to harbor life and liquid oceans.", funFact: "เป็นดาวเคราะห์หินดวงเดียวที่มีสนามแม่เหล็กรุนแรงปกป้องรังสีสุริยะ", funFactEn: "Earth has a powerful magnetic field that shields its atmosphere from solar wind." },
+          { id: "mars", name: "ดาวอังคาร", nameEn: "Mars", dist: 175, speed: 0.014, size: 6, realRadiusEarth: 0.53, color: "#cc5533", hasRing: false, realDistAU: 1.52, periodDays: 687, mass: "0.107 M⊕", radius: "0.53 R⊕", temp: "210 K", habitable: false, desc: "ดาวเคราะห์แดงที่มีภูเขาไฟสูงสุดในระบบสุริยะ (Olympus Mons)", descEn: "The Red Planet, home to Olympus Mons, the largest volcano in the Solar System.", funFact: "มีหิมะที่เป็นน้ำแข็งแห้ง (คาร์บอนไดออกไซด์) ตกที่ขั้วดาว", funFactEn: "Dry-ice (carbon dioxide) snow falls near the Martian poles during winter." },
+          { id: "jupiter", name: "ดาวพฤหัสบดี", nameEn: "Jupiter", dist: 225, speed: 0.009, size: 15, realRadiusEarth: 11.2, color: "#d9a066", hasRing: true, realDistAU: 5.20, periodDays: 4333, mass: "317.8 M⊕", radius: "11.2 R⊕", temp: "120 K", habitable: false, desc: "ดาวเคราะห์แก๊สยักษ์ขนาดใหญ่ที่สุด มีจุดแดงใหญ่ที่เป็นพายุขนาดมหึมา", descEn: "The largest gas giant in the Solar System, famous for its Great Red Spot storm.", funFact: "มวลของดาวพฤหัสฯ มากกว่าดาวเคราะห์ดวงอื่นในระบบสุริยะรวมกันถึง 2.5 เท่า", funFactEn: "Jupiter is more than twice as massive as all the other planets combined." },
+          { id: "saturn", name: "ดาวเสาร์", nameEn: "Saturn", dist: 275, speed: 0.006, size: 12, realRadiusEarth: 9.45, color: "#e6c280", hasRing: true, realDistAU: 9.58, periodDays: 10759, mass: "95.2 M⊕", radius: "9.45 R⊕", temp: "88 K", habitable: false, desc: "โดดเด่นด้วยระบบวงแหวนน้ำแข็งที่กว้างใหญ่และสวยงาม", descEn: "Adorned with an extensive, bright ring system made mostly of ice particles.", funFact: "ความหนาแน่นต่ำมากจนสามารถลอยน้ำได้หากมีอ่างน้ำใหญ่พอ", funFactEn: "Saturn's average density is lower than water." },
+          { id: "uranus", name: "ดาวยูเรนัส", nameEn: "Uranus", dist: 320, speed: 0.004, size: 9.5, realRadiusEarth: 4.00, color: "#73c2fb", hasRing: true, realDistAU: 19.2, periodDays: 30687, mass: "14.5 M⊕", radius: "4.0 R⊕", temp: "59 K", habitable: false, desc: "ดาวเคราะห์แก๊สเย็นจัดที่มีแกนหมุนตะแคงข้างเกือบ 98 องศา", descEn: "An ice giant whose rotational axis is tilted nearly 98 degrees on its side.", funFact: "หมุนตะแคงข้างเหมือนลูกบอลกำลังกลิ้งไปตามวงโคจร", funFactEn: "Uranus effectively rolls around the Sun on its side." },
+          { id: "neptune", name: "ดาวเนปจูน", nameEn: "Neptune", dist: 360, speed: 0.003, size: 9.5, realRadiusEarth: 3.88, color: "#2b547e", hasRing: true, realDistAU: 30.0, periodDays: 60190, mass: "17.1 M⊕", radius: "3.88 R⊕", temp: "48 K", habitable: false, desc: "ดาวเคราะห์สีน้ำเงินเข้มขอบนอกสุด มีความเร็วลมพายุสูงที่สุดในระบบสุริยะ", descEn: "The outermost major planet, whipped by supersonic winds exceeding 2,100 km/h.", funFact: "มีความเร็วลมสูงถึง 2,100 กม./ชม.", funFactEn: "Neptune hosts the fastest sustained winds of any planet in the Solar System." }
         ]
       }
     };
@@ -743,7 +1080,6 @@
         if (!p.realDistAU || parseFloat(p.realDistAU) <= 0) {
           p.realDistAU = parseFloat(p._resolvedAU.toFixed(4));
         }
-        // ยืนยันสถานะ habitable ให้ตรงกับวงแหวน HZ ของระบบเสมอ
         if (sys.hzMinAU && sys.hzMaxAU && p._resolvedAU > 0) {
           const inZone = p._resolvedAU >= parseFloat(sys.hzMinAU) && p._resolvedAU <= parseFloat(sys.hzMaxAU);
           if (inZone) p.habitable = true;
@@ -838,7 +1174,7 @@
       sys._safeRealAuScale = minRealisticAuScale;
     }
 
-    // Calibrate, filter HZ-only systems, and attach Featured System bookmarks
+    // Calibrate, filter HZ-only systems, and attach Featured System bookmarks (5 systems)
     const filteredSystemsData = {};
     Object.entries(systemsData).forEach(([id, sys]) => {
       calibrateSystemOrbits(sys);
@@ -1171,11 +1507,13 @@
     }
 
     function updateTrackingUI() {
+      const sys = systemsData[currentSystemId];
       const banner = document.getElementById("tracking-status-banner");
       const targetNameEl = document.getElementById("tracking-target-name");
-      if (trackedObject) {
+      if (trackedObject && sys) {
         banner.classList.remove("hidden");
-        targetNameEl.innerText = trackedObject.name;
+        const isStar = trackedObject === sys.star;
+        targetNameEl.innerText = isStar ? getDisplayStarName(sys) : getDisplayPlanetName(trackedObject);
       } else {
         banner.classList.add("hidden");
       }
@@ -1185,10 +1523,10 @@
       if (drawerBtn && drawerBtnText) {
         if (selectedObject && isObjectTracked(selectedObject)) {
           drawerBtn.className = "px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all flex items-center gap-1 bg-emerald-600 border-emerald-400 text-white track-glow";
-          drawerBtnText.innerText = "กำลังติดตาม";
+          drawerBtnText.innerText = t("trackingBtn");
         } else {
           drawerBtn.className = "px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all flex items-center gap-1 bg-slate-800 hover:bg-emerald-600/30 border-slate-700 text-slate-300 hover:text-emerald-300";
-          drawerBtnText.innerText = "ติดตาม";
+          drawerBtnText.innerText = t("trackBtn");
         }
       }
 
@@ -1203,15 +1541,14 @@
       init2D();
       init3D();
       setStarfieldMode(showStarfield);
-      renderPrefixFilterChips();
-      renderSystemList();
+      setLanguage(currentLang);
       selectSystem("sol");
       setupEventListeners();
       lastFrameTime = performance.now();
       requestAnimationFrame(animate);
     });
 
-    // --- Dynamic Filter Chips: Featured + Prefix Filter (Kepler, HD, TOI, HIP, GJ, etc.) ---
+    // --- Dynamic Filter Chips: Featured + Prefix Filter ---
     function extractSystemPrefix(name) {
       if (!name) return "";
       const clean = name.trim();
@@ -1250,7 +1587,7 @@
 
       container.innerHTML = "";
 
-      // 1) ปุ่ม "★ ระบบดาวเด่น"
+      // 1) ปุ่ม "★ ระบบดาวเด่น" (เฉพาะ 5 ระบบที่เลือกไว้)
       if (featuredCount > 0) {
         const featBtn = document.createElement("button");
         featBtn.type = "button";
@@ -1258,7 +1595,7 @@
         featBtn.className = isFeatActive
           ? "px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-500 text-slate-950 whitespace-nowrap border border-amber-300 featured-glow transition-all flex-shrink-0 flex items-center gap-1"
           : "px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-950/70 text-amber-300 hover:bg-amber-800/70 hover:text-amber-200 whitespace-nowrap border border-amber-500/40 transition-all flex-shrink-0 flex items-center gap-1";
-        featBtn.innerHTML = `<i class="fa-solid fa-star text-[9px]"></i> ระบบเด่น (${featuredCount})`;
+        featBtn.innerHTML = `<i class="fa-solid fa-star text-[9px]"></i> ${t("featuredChip")} (${featuredCount})`;
         featBtn.onclick = () => selectPrefixFilter(isFeatActive ? "" : "__featured__");
         container.appendChild(featBtn);
       }
@@ -1270,11 +1607,11 @@
       allBtn.className = isAllActive
         ? "px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-600 text-white whitespace-nowrap border border-blue-400 shadow-sm transition-all flex-shrink-0"
         : "px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-900/90 text-slate-300 hover:bg-slate-800 hover:text-white whitespace-nowrap border border-slate-700/70 transition-all flex-shrink-0";
-      allBtn.textContent = `ทั้งหมด (${allKeys.length})`;
+      allBtn.textContent = `${t("allChip")} (${allKeys.length})`;
       allBtn.onclick = () => selectPrefixFilter("");
       container.appendChild(allBtn);
 
-      // 3) ปุ่มคำขึ้นต้นอัตโนมัติ (Kepler, HD, TOI, GJ, HIP ฯลฯ)
+      // 3) ปุ่มคำขึ้นต้นอัตโนมัติ
       sortedPrefixes.forEach(([prefix, count]) => {
         const btn = document.createElement("button");
         btn.type = "button";
@@ -1290,10 +1627,10 @@
       const hint = document.getElementById("prefix-active-hint");
       if (hint) {
         if (selectedPrefixFilter === "__featured__") {
-          hint.textContent = "เฉพาะระบบเด่น";
+          hint.textContent = t("filteringFeatured");
           hint.classList.remove("hidden");
         } else if (selectedPrefixFilter) {
-          hint.textContent = `ขึ้นต้น: ${selectedPrefixFilter}`;
+          hint.textContent = `${t("filteringPrefix")} ${selectedPrefixFilter}`;
           hint.classList.remove("hidden");
         } else {
           hint.classList.add("hidden");
@@ -1334,6 +1671,7 @@
 
     function renderSystemList() {
       const container = document.getElementById("system-list");
+      if (!container) return;
       container.innerHTML = "";
       
       const allKeys = Object.keys(systemsData);
@@ -1356,16 +1694,18 @@
           const matchSystem = sysNameLower.includes(q);
           const matchStar = starNameLower.includes(q);
           const matchType = (sys.type || "").toLowerCase().includes(q);
-          const matchTag = (sys._featured?.tag || "").toLowerCase().includes(q);
-          const matchPlanet = (sys.planets || []).some(p => (p.name || "").toLowerCase().includes(q));
+          const matchTag = (sys._featured?.tagTh || "").toLowerCase().includes(q) || (sys._featured?.tagEn || "").toLowerCase().includes(q);
+          const matchPlanet = (sys.planets || []).some(p => (p.name || "").toLowerCase().includes(q) || (p.nameEn || "").toLowerCase().includes(q));
           return matchSystem || matchStar || matchType || matchTag || matchPlanet;
         }
 
         return true;
       });
 
-      // จัดเรียงให้ระบบเด่นอยู่บนสุดตามลำดับความสำคัญ ตามด้วยระบบอื่นๆ
+      // จัดเรียงให้ "สุริยะของเรา" อยู่บนสุด ตามด้วยระบบเด่น 5 ระบบ และระบบอื่นๆ
       filteredKeys.sort((a, b) => {
+        if (a === "sol") return -1;
+        if (b === "sol") return 1;
         const fa = systemsData[a]._featured;
         const fb = systemsData[b]._featured;
         if (fa && fb) return fa.rank - fb.rank;
@@ -1376,19 +1716,19 @@
 
       const isFiltering = Boolean(q || pfx);
       const countBadge = document.getElementById("system-count-badge");
-      if (countBadge) countBadge.innerText = isFiltering ? `${filteredKeys.length}/${allKeys.length} ระบบ` : `${allKeys.length} ระบบ`;
+      if (countBadge) countBadge.innerText = isFiltering ? `${filteredKeys.length}/${allKeys.length} ${t("systemUnit")}` : `${allKeys.length} ${t("systemUnit")}`;
 
       const toggleBtnText = document.getElementById("btn-toggle-systems-text");
-      if (toggleBtnText) toggleBtnText.innerText = `ระบบดาว (${allKeys.length})`;
+      if (toggleBtnText) toggleBtnText.innerText = `${t("systemsBtn")} (${allKeys.length})`;
 
       if (filteredKeys.length === 0) {
         const emptyState = document.createElement("div");
         emptyState.className = "text-center py-8 px-3 text-slate-400 text-xs space-y-2";
         emptyState.innerHTML = `
           <i class="fa-solid fa-telescope text-2xl text-slate-600 block"></i>
-          <div>ไม่พบระบบดาวที่ตรงกับเงื่อนไขการค้นหา</div>
+          <div>${t("emptySearch")}</div>
           <button type="button" onclick="clearSystemSearch()" class="mt-1 px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] border border-slate-700 transition-all">
-            ล้างตัวกรองทั้งหมด
+            ${t("clearFilterBtn")}
           </button>
         `;
         container.appendChild(emptyState);
@@ -1398,6 +1738,7 @@
       filteredKeys.forEach(key => {
         const sys = systemsData[key];
         const isSelected = key === currentSystemId;
+        const isSol = key === "sol";
         const feat = sys._featured;
 
         const row = document.createElement("div");
@@ -1413,23 +1754,29 @@
           if (window.innerWidth < 768) toggleSystemSidebar(false);
         };
         
+        const subText = isSol
+          ? `${t("ourSolarTag")} • ${sys.planets.length} ${t("planetUnit")}`
+          : feat
+            ? `${getFeaturedTag(feat)} • ${sys.planets.length} ${t("planetShortUnit")}`
+            : `${sys.planets.length} ${t("planetUnit")} • ${sys.discoveryYear}`;
+
         row.innerHTML = `
           <div class="flex items-center gap-2.5 min-w-0 flex-1">
             <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${sys.star.color}; box-shadow: 0 0 6px ${sys.star.color}"></div>
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-1.5">
-                <span class="text-xs truncate">${sys.name}</span>
-                ${feat ? `<span class="px-1.5 py-0.2 rounded bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[9px] font-semibold flex-shrink-0"><i class="fa-solid fa-star text-[8px] mr-0.5"></i>เด่น</span>` : ''}
+                <span class="text-xs truncate">${getDisplaySystemName(sys)}</span>
+                ${feat ? `<span class="px-1.5 py-0.2 rounded bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[9px] font-semibold flex-shrink-0"><i class="fa-solid fa-star text-[8px] mr-0.5"></i>${t("featuredTagShort")}</span>` : ''}
               </div>
-              <div class="text-[10px] ${feat ? 'text-amber-200/75' : 'opacity-60'} truncate">
-                ${feat ? `${feat.tag} • ${sys.planets.length} ดาว` : `${sys.planets.length} ดาวเคราะห์ • ${sys.discoveryYear}`}
+              <div class="text-[10px] ${feat ? 'text-amber-200/75' : (isSol ? 'text-blue-300/85' : 'opacity-60')} truncate">
+                ${subText}
               </div>
             </div>
           </div>
           ${sys.isCustom ? `
             <div class="flex items-center gap-1 flex-shrink-0 ml-1">
               <span class="text-[9px] bg-emerald-950 text-emerald-400 border border-emerald-800 px-1.5 py-0.5 rounded">Custom</span>
-              <button type="button" onclick="deleteCustomSystem(event, '${key}')" title="ลบระบบดาวนี้" class="w-5 h-5 rounded bg-rose-950/70 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-800/70 flex items-center justify-center transition-all">
+              <button type="button" onclick="deleteCustomSystem(event, '${key}')" class="w-5 h-5 rounded bg-rose-950/70 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-800/70 flex items-center justify-center transition-all">
                 <i class="fa-solid fa-trash-can text-[9px]"></i>
               </button>
             </div>
@@ -1443,7 +1790,7 @@
       event.stopPropagation();
       const sys = systemsData[systemId];
       if (!sys || !sys.isCustom) return;
-      if (!confirm(`ต้องการลบระบบดาว "${sys.name}" ใช่หรือไม่?`)) return;
+      if (!confirm(t("deleteConfirm"))) return;
 
       delete systemsData[systemId];
       const customOnly = {};
@@ -1482,11 +1829,10 @@
       starDot.style.boxShadow = `0 0 6px ${sys.star.color}`;
 
       const starNameSpan = document.createElement("span");
-      starNameSpan.textContent = sys.star.name;
+      starNameSpan.textContent = getDisplayStarName(sys);
 
       const starTrackBtn = document.createElement("button");
       starTrackBtn.type = "button";
-      starTrackBtn.title = isStarTracked ? "ยกเลิกการติดตาม" : "ติดตามดาวฤกษ์นี้";
       starTrackBtn.className = `ml-1 w-5 h-5 rounded flex items-center justify-center transition-all ${
         isStarTracked ? "bg-emerald-500 text-slate-950" : "bg-slate-800/90 text-slate-400 hover:bg-emerald-600/40 hover:text-emerald-300"
       }`;
@@ -1520,7 +1866,7 @@
         pDot.style.backgroundColor = p.color;
 
         const pNameSpan = document.createElement("span");
-        pNameSpan.textContent = p.name;
+        pNameSpan.textContent = getDisplayPlanetName(p);
 
         pill.appendChild(pDot);
         pill.appendChild(pNameSpan);
@@ -1534,7 +1880,6 @@
 
         const trackBtn = document.createElement("button");
         trackBtn.type = "button";
-        trackBtn.title = isTracked ? "ยกเลิกการติดตาม" : "ติดตามดาวเคราะห์นี้";
         trackBtn.className = `ml-1 w-5 h-5 rounded flex items-center justify-center transition-all ${
           isTracked ? "bg-emerald-500 text-slate-950" : "bg-slate-800/90 text-slate-400 hover:bg-emerald-600/40 hover:text-emerald-300"
         }`;
@@ -1577,9 +1922,11 @@
       const featBadge = document.getElementById("header-featured-badge");
       if (featBadge) featBadge.classList.toggle("hidden", !feat);
 
-      document.getElementById("current-system-subtitle").innerText = feat
-        ? `${sys.name} • ${feat.tag} (${sys.discoveryYear})`
-        : `${sys.name} • ${sys.type} (${sys.discoveryYear})`;
+      document.getElementById("current-system-subtitle").innerText = systemId === "sol"
+        ? `${t("ourSolarTag")} • 8 ${t("planetUnit")}`
+        : feat
+          ? `${getDisplaySystemName(sys)} • ${getFeaturedTag(feat)} (${sys.discoveryYear})`
+          : `${getDisplaySystemName(sys)} • ${sys.type} (${sys.discoveryYear})`;
       
       sys.planets.forEach(p => { if (p.angle === undefined) p.angle = Math.random() * Math.PI * 2; });
 
@@ -1881,7 +2228,8 @@
         ctx2D.fillStyle = isObjectTracked(sys.star) ? "#4ade80" : (sys._featured ? "#fcd34d" : "#ffffff");
         ctx2D.font = `${(isObjectTracked(sys.star) || sys._featured) ? 'bold ' : ''}${12 / zoom2D}px Kanit`;
         ctx2D.textAlign = "center";
-        const starLabelText = sys._featured ? `★ ${sys.star.name}` : sys.star.name;
+        const starDisplay = getDisplayStarName(sys);
+        const starLabelText = sys._featured ? `★ ${starDisplay}` : starDisplay;
         ctx2D.fillText(starLabelText, 0, starRadius + (16 / zoom2D));
       }
 
@@ -1963,7 +2311,7 @@
           ctx2D.fillStyle = isTracked ? "#4ade80" : (p.habitable ? "#86efac" : "#cbd5e1");
           ctx2D.font = `${isTracked ? 'bold ' : ''}${11 / zoom2D}px Kanit`;
           ctx2D.textAlign = "center";
-          ctx2D.fillText(p.name, x, y + size + (15 / zoom2D));
+          ctx2D.fillText(getDisplayPlanetName(p), x, y + size + (15 / zoom2D));
         }
       });
 
@@ -2190,7 +2538,8 @@
       if (labelsContainer) {
         const sLabel = document.createElement("div");
         sLabel.className = "label-3d-tag text-[12px] text-white";
-        sLabel.textContent = sys._featured ? `★ ${sys.star.name}` : sys.star.name;
+        const sName = getDisplayStarName(sys);
+        sLabel.textContent = sys._featured ? `★ ${sName}` : sName;
         labelsContainer.appendChild(sLabel);
         starLabel3D = sLabel;
       }
@@ -2281,7 +2630,7 @@
         if (labelsContainer) {
           const pLabel = document.createElement("div");
           pLabel.className = "label-3d-tag text-[11px]";
-          pLabel.textContent = p.name;
+          pLabel.textContent = getDisplayPlanetName(p);
           labelsContainer.appendChild(pLabel);
           planetLabels3D.push({ el: pLabel, mesh: planetMesh, data: p, baseSize: size });
         }
@@ -2554,21 +2903,21 @@
       const drawer = document.getElementById("planet-drawer");
       const sys = systemsData[currentSystemId];
       
-      document.getElementById("info-type").innerText = type === "star" ? "ดาวฤกษ์ (Host Star)" : "ดาวเคราะห์ (Planet)";
-      document.getElementById("info-name").innerText = item.name;
-      document.getElementById("info-desc").innerText = item.desc || "-";
+      document.getElementById("info-type").innerText = type === "star" ? t("typeStar") : t("typePlanet");
+      document.getElementById("info-name").innerText = type === "star" ? getDisplayStarName(sys) : getDisplayPlanetName(item);
+      document.getElementById("info-desc").innerText = getDisplayDesc(item, sys);
       document.getElementById("info-mass").innerText = item.mass || "-";
       document.getElementById("info-radius").innerText = (type === "star" ? (item.displayRadius || "1.00 R☉") : item.radius) || "-";
-      document.getElementById("info-period").innerText = type === "star" ? "N/A" : `${item.periodDays} วันโลก`;
+      document.getElementById("info-period").innerText = type === "star" ? "N/A" : `${item.periodDays} ${t("earthDays")}`;
       document.getElementById("info-temp").innerText = item.temp || "-";
-      document.getElementById("info-funfact").innerText = item.funFact || "ไม่มีข้อมูลเพิ่มเติม";
+      document.getElementById("info-funfact").innerText = getDisplayFunFact(item, sys);
 
       const featBox = document.getElementById("info-featured-box");
       const featNote = document.getElementById("info-featured-note");
       if (featBox && featNote) {
         if (sys._featured) {
           featBox.classList.remove("hidden");
-          featNote.innerText = sys._featured.note;
+          featNote.innerText = getFeaturedNote(sys._featured);
         } else {
           featBox.classList.add("hidden");
         }
@@ -2584,13 +2933,13 @@
         if (item.habitable) {
           habBox.className = "p-2.5 rounded-lg border flex items-center gap-3 bg-emerald-950/40 border-emerald-800 text-emerald-400";
           habIcon.className = "fa-solid fa-seedling text-lg text-emerald-400";
-          habTitle.innerText = "อยู่ในโซนเอื้อต่อสิ่งมีชีวิต (Habitable Zone)";
-          habDesc.innerText = "มีอุณหภูมิเหมาะสมที่เอื้อให้อาจมีน้ำในสถานะของเหลวได้";
+          habTitle.innerText = t("habitableTitle");
+          habDesc.innerText = t("habitableDesc");
         } else {
           habBox.className = "p-2.5 rounded-lg border flex items-center gap-3 bg-slate-900/60 border-slate-800 text-slate-400";
           habIcon.className = "fa-solid fa-ban text-lg text-slate-500";
-          habTitle.innerText = "อยู่นอกโซนเอื้อต่อสิ่งมีชีวิต";
-          habDesc.innerText = "อุณหภูมิร้อนหรือหนาวจัดเกินไปสำหรับสิ่งมีชีวิตแบบโลก";
+          habTitle.innerText = t("nonHabitableTitle");
+          habDesc.innerText = t("nonHabitableDesc");
         }
       } else {
         habBox.classList.add("hidden");
@@ -2615,8 +2964,8 @@
       
       const container = document.getElementById("planet-rows-container");
       container.innerHTML = "";
-      addPlanetRow("ดาวเคราะห์ b", 80, 0.02, 6, "#3498db", true);
-      addPlanetRow("ดาวเคราะห์ c", 140, 0.012, 9, "#e67e22", false);
+      addPlanetRow(currentLang === "en" ? "Planet b" : "ดาวเคราะห์ b", 80, 0.02, 6, "#3498db", true);
+      addPlanetRow(currentLang === "en" ? "Planet c" : "ดาวเคราะห์ c", 140, 0.012, 9, "#e67e22", false);
     }
 
     function closeAddSystemModal() {
@@ -2633,30 +2982,30 @@
       
       row.innerHTML = `
         <div class="flex justify-between items-center">
-          <span class="text-slate-400 font-semibold text-[11px]">ดาวเคราะห์ดวงที่ ${index}</span>
+          <span class="text-slate-400 font-semibold text-[11px]">${t("modalPlanetIdx")} ${index}</span>
           ${index > 1 ? `<button type="button" onclick="this.parentElement.parentElement.remove()" class="text-rose-400 hover:text-rose-300 text-xs"><i class="fa-solid fa-trash"></i></button>` : ''}
         </div>
         <div class="grid grid-cols-3 gap-2">
           <div>
-            <label class="block text-[10px] text-slate-500 mb-0.5">ชื่อดาวเคราะห์</label>
+            <label class="block text-[10px] text-slate-500 mb-0.5">${t("modalPlanetName")}</label>
             <input type="text" value="${name || 'Planet '+index}" required class="p-name w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-white text-[11px]">
           </div>
           <div>
-            <label class="block text-[10px] text-slate-500 mb-0.5">ระยะห่าง (Dist)</label>
+            <label class="block text-[10px] text-slate-500 mb-0.5">${t("modalPlanetDist")}</label>
             <input type="number" value="${dist}" min="40" max="400" required class="p-dist w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-white text-[11px]">
           </div>
           <div>
-            <label class="block text-[10px] text-slate-500 mb-0.5">ขนาด (Size)</label>
+            <label class="block text-[10px] text-slate-500 mb-0.5">${t("modalPlanetSize")}</label>
             <input type="number" value="${size}" min="3" max="25" required class="p-size w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-white text-[11px]">
           </div>
         </div>
         <div class="grid grid-cols-3 gap-2 items-center">
           <div>
-            <label class="block text-[10px] text-slate-500 mb-0.5">สีดาว</label>
+            <label class="block text-[10px] text-slate-500 mb-0.5">${t("modalPlanetColor")}</label>
             <input type="color" value="${color}" class="p-color w-full h-7 bg-slate-900 border border-slate-800 rounded cursor-pointer">
           </div>
           <div>
-            <label class="block text-[10px] text-slate-500 mb-0.5">ความเร็วโคจร</label>
+            <label class="block text-[10px] text-slate-500 mb-0.5">${t("modalPlanetSpeed")}</label>
             <input type="number" value="${speed}" step="0.005" min="0.001" max="0.1" required class="p-speed w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-white text-[11px]">
           </div>
           <div class="pt-3 flex items-center gap-1.5">
@@ -2705,7 +3054,9 @@
           temp: habitable ? "280 K" : "400 K",
           habitable: habitable,
           desc: "ดาวเคราะห์ที่สร้างขึ้นโดยผู้ใช้งาน",
-          funFact: "เป็นระบบดาวเคราะห์ที่ออกแบบขึ้นเองในสคริปต์ Explorer"
+          descEn: "Custom exoplanet created by user.",
+          funFact: "เป็นระบบดาวเคราะห์ที่ออกแบบขึ้นเองในสคริปต์ Explorer",
+          funFactEn: "Custom planetary system designed in HZ Explorer."
         });
       });
 
@@ -2729,7 +3080,8 @@
           type: "Custom Star",
           temp: "5,500 K",
           mass: "1.0 M☉",
-          desc: "ดาวฤกษ์ศูนย์กลางของระบบที่ผู้ใช้สร้างขึ้น"
+          desc: "ดาวฤกษ์ศูนย์กลางของระบบที่ผู้ใช้สร้างขึ้น",
+          descEn: "Custom host star created by user."
         },
         planets: planets
       };
