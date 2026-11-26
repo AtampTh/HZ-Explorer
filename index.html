@@ -981,11 +981,14 @@
       requestAnimationFrame(updateLoader);
     }
 
-    // --- True Physical Astronomical Scale Constants ---
-    const SOLAR_TO_EARTH_RADII = 109.1;
+    // --- True Physical Astronomical Scale Constants (1:1 Rule-of-Three / บัญญัติไตรยางศ์) ---
+    // 1 AU = 149,597,871 km | 1 R☉ = 695,700 km | 1 R⊕ = 6,371 km
+    // 1 AU = 215.032 R☉ = 23,481 R⊕
+    const AU_TO_SOLAR_RADII = 149597870.7 / 695700; // ~215.032
+    const SOLAR_TO_EARTH_RADII = 695700 / 6371;     // ~109.198
     const REAL_AU_BASE_PX = 240;
-    const REAL_EARTH_RADIUS_PX = 0.24;
-    const REAL_SOLAR_RADIUS_PX = REAL_EARTH_RADIUS_PX * SOLAR_TO_EARTH_RADII; // ~26.18 px
+    const REAL_SOLAR_RADIUS_PX = REAL_AU_BASE_PX / AU_TO_SOLAR_RADII;        // 1.1161 px
+    const REAL_EARTH_RADIUS_PX = REAL_SOLAR_RADIUS_PX / SOLAR_TO_EARTH_RADII; // 0.01022 px
 
     const defaultSystemsData = {
       "sol": {
@@ -1052,7 +1055,6 @@
       if (/^M\d|RED\s*DWARF|ULTRA-?COOL|M-DWARF/.test(specType)) {
         return true;
       }
-      // ตรวจสีโทนแดง/ส้มเข้มของดาวแคระแดง (#ff3..., #ff4..., #ff5..., #e..., #d...)
       if (colorHex.startsWith("#") && colorHex.length === 7) {
         const r = parseInt(colorHex.slice(1, 3), 16);
         const g = parseInt(colorHex.slice(3, 5), 16);
@@ -1086,18 +1088,15 @@
       const sysName = (sys.name || "").toLowerCase();
       const isCoolRedDwarf = isRedOrCoolDwarfStar(sys);
 
-      // ค่าแม่นยำสำหรับระบบดาวแคระแดงชื่อดัง
       if (/trappist-?1/.test(sysName)) return 0.1192;
       if (/proxima\s*cen/.test(sysName)) return 0.1542;
 
-      // 1) ตรวจฟิลด์ที่ระบุเป็น R☉ โดยตรง
       const directCandidates = [s.realRadiusSolar, s.st_rad, s.starRadiusSolar, s.radiusSolar];
       for (const cand of directCandidates) {
         if (cand === undefined || cand === null) continue;
         const str = String(cand);
         const val = extractNumberFromField(cand, false);
         if (val !== null && val > 0.02 && val < 500) {
-          // ป้องกันกรณีฟิลด์นี้เก็บค่าเป็น R⊕ (เช่น 13.0 R⊕) สำหรับดาวแคระแดง
           if (/R_?⊕|Earth/i.test(str) || (isCoolRedDwarf && val > 2.5)) {
             return parseFloat((val / SOLAR_TO_EARTH_RADII).toFixed(4));
           }
@@ -1105,13 +1104,11 @@
         }
       }
 
-      // 2) ตรวจข้อความ displayRadius / radiusText / desc / funFact โดยแยกหน่วย R⊕ กับ R☉ ชัดเจน
       const textFields = [s.displayRadius, s.radiusText, s.desc, s.funFact];
       for (const txt of textFields) {
         if (!txt) continue;
         const str = String(txt);
 
-        // ถ้ามีหน่วย R⊕ หรือ Earth กำกับ ให้หาร 109.1 แปลงเป็น R☉ ทันที
         const earthUnitMatch = str.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:R⊕|R_?⊕|R_?Earth|Earth\s*Radii)/i);
         if (earthUnitMatch) {
           const eVal = parseFloat(earthUnitMatch[1]);
@@ -1120,12 +1117,10 @@
           }
         }
 
-        // ถ้ามีหน่วย R☉ หรือ Solar กำกับ
         const solarMatch = str.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:R☉|R_?Sun|Solar\s*Radii|R_?☉)/i);
         if (solarMatch) {
           const v = parseFloat(solarMatch[1]);
           if (v > 0.02 && v < 500) {
-            // หากเป็นดาวแคระแดงแต่ตัวเลขเกิน 2.5 แสดงว่าต้นทางใส่หน่วย R⊕ มาผิด
             if (isCoolRedDwarf && v > 2.5) {
               return parseFloat((v / SOLAR_TO_EARTH_RADII).toFixed(4));
             }
@@ -1134,20 +1129,17 @@
         }
       }
 
-      // 3) คำนวณจากมวลดาวฤกษ์ (M☉) ตามความสัมพันธ์ M-R ของดาวฤกษ์แถบลำดับหลัก
       const massCandidates = [s.st_mass, s.mass];
       for (const mCand of massCandidates) {
         if (!mCand) continue;
         const str = String(mCand);
         const mVal = extractNumberFromField(str, false);
         if (mVal !== null && mVal > 0.05 && mVal < 150) {
-          // สำหรับดาวแคระแดง (M < 0.6 M☉): R ≈ M^0.88 (แม่นยำกว่า M^0.8)
           const exp = mVal < 0.6 ? 0.88 : 0.80;
           return parseFloat(Math.pow(mVal, exp).toFixed(4));
         }
       }
 
-      // 4) ประมาณค่าจากอุณหภูมิยังผล (Effective Temperature)
       const tempVal = extractNumberFromField(s.st_teff || s.temp, false);
       if (tempVal !== null && tempVal >= 2200 && tempVal <= 15000) {
         if (tempVal < 2700) return 0.12;
@@ -1159,7 +1151,6 @@
         return 1.35;
       }
 
-      // 5) ถ้าไม่มีข้อมูลตัวเลขเลย แต่เป็นดาวฤกษ์สีแดง (M-dwarf) ให้ใช้ค่าเฉลี่ยดาวแคระแดงจริง (0.24 R☉) แทน 0.85 R☉
       if (isCoolRedDwarf) return 0.24;
 
       return 0.85;
@@ -1596,7 +1587,7 @@
       }
     }
 
-    // --- True Astronomical Scale Helpers (1 R☉ = 109.1 R⊕ ไม่ปัดขึ้นจนดาวฤกษ์กับดาวเคราะห์เท่ากัน) ---
+    // --- True 1:1 Astronomical Scale Helpers (1 AU = 240 px, 1 R☉ = 1.116 px, 1 R⊕ = 0.01022 px) ---
     function getAuScale(sys) {
       return sys._safeRealAuScale || REAL_AU_BASE_PX;
     }
@@ -1606,8 +1597,7 @@
         return sys.star._safeSchematicRadius || Number(sys.star.radius) || 18;
       }
       const solarR = sys.star._parsedSolarR !== undefined ? sys.star._parsedSolarR : parseStarSolarRadius(sys);
-      // คงอัตราส่วนจริง 100% (ไม่มี Math.max(1.2) มาปัดขึ้นให้เพี้ยน)
-      return Math.max(0.25, solarR * REAL_SOLAR_RADIUS_PX);
+      return Math.max(0.04, solarR * REAL_SOLAR_RADIUS_PX);
     }
 
     function getPlanetSchematicSize(p) {
@@ -1616,8 +1606,7 @@
 
     function getPlanetRealRadius(p) {
       const earthR = p._parsedEarthR !== undefined ? p._parsedEarthR : parsePlanetEarthRadius(p);
-      // คงอัตราส่วนจริง 100% (1 R⊕ = 0.24 px, ดาวแคระแดง 0.12 R☉ = 3.14 px -> ใหญ่กว่าโลก ~13 เท่าตามจริง)
-      return Math.max(0.015, earthR * REAL_EARTH_RADIUS_PX);
+      return Math.max(0.004, earthR * REAL_EARTH_RADIUS_PX);
     }
 
     function getPlanetDist(sys, p) {
@@ -1630,6 +1619,7 @@
         return Math.max(baseDist, starR + pSize * ringMult + 14);
       }
 
+      // 1:1 AU proportional distance (บัญญัติไตรยางศ์ตรงกับรัศมีดาวฤกษ์ 1 AU = 215.032 R☉)
       const au = p._resolvedAU || resolvePlanetAU(sys, p);
       return au * getAuScale(sys);
     }
@@ -1658,14 +1648,14 @@
 
       const minScreenDim = Math.min(window.innerWidth, window.innerHeight);
       const targetScreenRadius = minScreenDim * 0.36;
-      const idealZoom2D = Math.max(0.15, Math.min(25.0, targetScreenRadius / Math.max(1, maxOrbitPx)));
+      const idealZoom2D = Math.max(0.15, Math.min(40.0, targetScreenRadius / Math.max(0.5, maxOrbitPx)));
 
       panX = 0;
       panY = 0;
       zoom2D = idealZoom2D;
 
       if (camera3D && controls3D) {
-        const fitDist3D = Math.max(6, Math.min(9000, maxOrbitPx * 2.4));
+        const fitDist3D = Math.max(3, Math.min(9000, maxOrbitPx * 2.4));
         camera3D.position.set(0, fitDist3D * 0.65, fitDist3D * 0.95);
         controls3D.target.set(0, 0, 0);
         controls3D.update();
@@ -2215,7 +2205,7 @@
       canvas2D.addEventListener("wheel", e => {
         e.preventDefault();
         const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
-        zoom2D = Math.max(0.05, Math.min(35.0, zoom2D * zoomFactor));
+        zoom2D = Math.max(0.05, Math.min(250.0, zoom2D * zoomFactor));
       }, { passive: false });
 
       canvas2D.addEventListener("click", handle2DClick);
@@ -2271,7 +2261,7 @@
 
           if (lastPinchDist > 0) {
             const scaleFactor = dist / lastPinchDist;
-            const newZoom = Math.max(0.05, Math.min(35.0, zoom2D * scaleFactor));
+            const newZoom = Math.max(0.05, Math.min(250.0, zoom2D * scaleFactor));
             const worldX = (lastPinchCenterX - (canvas2D.width / 2 + panX)) / zoom2D;
             const worldY = (lastPinchCenterY - (canvas2D.height / 2 + panY)) / zoom2D;
             panX = centerX - canvas2D.width / 2 - worldX * newZoom;
@@ -2432,7 +2422,7 @@
       ctx2D.arc(0, 0, starRadius, 0, Math.PI * 2);
       ctx2D.fillStyle = sys.star.color;
       ctx2D.shadowColor = sys.star.color;
-      ctx2D.shadowBlur = realisticLighting ? 38 : (isRealisticScale ? 20 : 30);
+      ctx2D.shadowBlur = realisticLighting ? 38 : (isRealisticScale ? 12 : 30);
       ctx2D.fill();
       ctx2D.shadowBlur = 0;
 
@@ -2449,11 +2439,11 @@
         ctx2D.fillText(starLabelText, 0, starRadius + (16 / zoom2D));
       }
 
-      // Draw Planets
+      // Draw Planets (แสดงจุดขั้นต่ำ 1.5px บนจอเพื่อให้มองเห็นตำแหน่งได้แม้ซูมออกไกล แต่คงสัดส่วนจริง 100%)
       sys.planets.forEach(p => {
         const dist = isRealisticScale ? getPlanetDist(sys, p) : Math.max(getPlanetDist(sys, p), starRadius + 24);
         const baseSize = isRealisticScale ? getPlanetRealRadius(p) : getPlanetSchematicSize(p);
-        let size = isRealisticScale ? baseSize : Math.max(baseSize, 2.8 / zoom2D);
+        let size = isRealisticScale ? Math.max(baseSize, 1.35 / zoom2D) : Math.max(baseSize, 2.8 / zoom2D);
 
         const x = Math.cos(p.angle) * dist;
         const y = Math.sin(p.angle) * dist;
@@ -2465,7 +2455,7 @@
         ctx2D.fillStyle = p.color;
         if (!realisticLighting) {
           ctx2D.shadowColor = isTracked ? "#22c55e" : p.color;
-          ctx2D.shadowBlur = isTracked ? 16 : (p.habitable ? 12 : 4);
+          ctx2D.shadowBlur = isTracked ? 16 : (p.habitable ? 10 : 4);
         }
         ctx2D.fill();
         ctx2D.shadowBlur = 0;
@@ -2656,7 +2646,7 @@
       const container = document.getElementById("canvas-container-3d");
       scene3D = new THREE.Scene();
 
-      camera3D = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.02, 30000);
+      camera3D = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.002, 30000);
       camera3D.position.set(0, 450, 650);
 
       renderer3D = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
@@ -2669,7 +2659,7 @@
       controls3D = new THREE.OrbitControls(camera3D, renderer3D.domElement);
       controls3D.enableDamping = true;
       controls3D.dampingFactor = 0.05;
-      controls3D.minDistance = 0.1;
+      controls3D.minDistance = 0.01;
       controls3D.maxDistance = 15000;
       controls3D.enableRotate = true;
       controls3D.enableZoom = true;
@@ -2810,9 +2800,9 @@
         let size = isRealisticScale ? getPlanetRealRadius(p) : getPlanetSchematicSize(p) * 0.6;
 
         const ringMult = p.hasRing ? 2.1 : 1.05;
-        const max3DSize = (dist - starR - 0.5) / ringMult;
+        const max3DSize = (dist - starR - 0.05) / ringMult;
         if (max3DSize > 0 && size > max3DSize) {
-          size = Math.max(0.015, max3DSize);
+          size = Math.max(0.004, max3DSize);
         }
 
         const orbitGeo = new THREE.BufferGeometry();
@@ -2914,7 +2904,7 @@
           trackRing3D.visible = true;
           trackRing3D.position.copy(currentPos);
           const pulse = 1 + 0.08 * Math.sin(performance.now() * 0.006);
-          trackRing3D.scale.setScalar(Math.max(trackedRadius3D, 0.25) * pulse);
+          trackRing3D.scale.setScalar(Math.max(trackedRadius3D, 0.05) * pulse);
         }
       } else if (trackRing3D) {
         trackRing3D.visible = false;
